@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Luyện Toán</title>
+
+<style>
+body {
+    background: #ccc;
+    text-align: center;
+    font-family: Arial;
+}
+
+button {
+    font-size: 18px;
+    margin: 10px;
+}
+
+#box {
+    background: white;
+    color: black;
+    padding: 20px;
+    font-size: 30px;
+    margin: 20px auto;
+    width: 200px;
+}
+
+input {
+    background: orange;
+    font-size: 25px;
+    padding: 10px;
+    text-align: center;
+}
+
+.correct { background: lightgreen !important; }
+.wrong { background: red !important; }
+
+table {
+    margin: auto;
+    border-collapse: collapse;
+}
+
+th, td {
+    border: 1px solid black;
+    padding: 10px;
+}
+
+th {
+    background: purple;
+    color: white;
+}
+
+#result { white-space: pre-line; margin-top: 20px; }
+
+.hidden { display: none; }
+</style>
+</head>
+
+<body>
+
+<h2>Luyện toán 🐍</h2>
+
+<!-- MENU -->
+<div id="menu">
+    <button onclick="start()">Bắt đầu luyện tập</button>
+    <button onclick="showHistory()">Xem lại kết quả</button>
+</div>
+
+<!-- GAME -->
+<div id="game" class="hidden">
+    <div id="box"></div>
+    <input id="ans">
+    <br><br>
+    <button onclick="check()">Trả lời</button>
+</div>
+
+<!-- RESULT -->
+<div id="result"></div>
+
+<!-- HISTORY -->
+<div id="history" class="hidden">
+    <h3>Kết quả 📊</h3>
+    <table id="table">
+        <tr>
+            <th>Ngày</th>
+            <th>Thời gian</th>
+            <th>TB</th>
+            <th>% đúng</th>
+        </tr>
+    </table>
+    <button onclick="backMenu()">Quay lại</button>
+</div>
+
+<script>
+let total = 10;
+let done = 0;
+let correct = 0;
+let a, b;
+let startTime;
+
+function start() {
+    document.getElementById("menu").classList.add("hidden");
+    document.getElementById("game").classList.remove("hidden");
+
+    done = 0;
+    correct = 0;
+    startTime = Date.now();
+    next();
+}
+
+function next() {
+    if (done >= total) {
+        finish();
+        return;
+    }
+
+    a = Math.floor(Math.random()*90)+10;
+    b = Math.floor(Math.random()*90)+10;
+
+    document.getElementById("box").innerText = a + " + " + b;
+    document.getElementById("ans").value = "";
+    document.getElementById("ans").className = "";
+}
+
+function check() {
+    let input = document.getElementById("ans");
+    let val = parseInt(input.value);
+
+    if (val === a + b) {
+        input.value = "✅";
+        input.className = "correct";
+        correct++;
+    } else {
+        input.value = "❎";
+        input.className = "wrong";
+    }
+
+    done++;
+
+    setTimeout(next, 600);
+}
+
+function finish() {
+    let time = (Date.now() - startTime)/1000;
+    let avg = time / total;
+    let percent = Math.round(correct/total*100);
+
+    document.body.style.background = "purple";
+
+    document.getElementById("game").classList.add("hidden");
+
+    document.getElementById("result").innerText =
+        "⏱️ " + time.toFixed(2) + "s\n" +
+        "⚡ TB: " + avg.toFixed(2) + "s\n" +
+        "🎯 " + percent + "%";
+
+    save(time, avg, percent);
+}
+
+function save(time, avg, percent) {
+    let data = JSON.parse(localStorage.getItem("history") || "[]");
+
+    let now = new Date();
+    let date = now.toLocaleDateString();
+
+    data.push({
+        date: date,
+        time: time.toFixed(2),
+        avg: avg.toFixed(2),
+        percent: percent
+    });
+
+    localStorage.setItem("history", JSON.stringify(data));
+}
+
+function showHistory() {
+    document.getElementById("menu").classList.add("hidden");
+    document.getElementById("history").classList.remove("hidden");
+
+    let table = document.getElementById("table");
+    table.innerHTML =
+        "<tr><th>Ngày</th><th>Thời gian</th><th>TB</th><th>% đúng</th></tr>";
+
+    let data = JSON.parse(localStorage.getItem("history") || "[]");
+
+    data.forEach(d => {
+        let row = table.insertRow();
+        row.insertCell(0).innerText = d.date;
+        row.insertCell(1).innerText = d.time + "s";
+        row.insertCell(2).innerText = d.avg + "s";
+        row.insertCell(3).innerText = d.percent + "%";
+    });
+}
+
+function backMenu() {
+    document.getElementById("history").classList.add("hidden");
+    document.getElementById("menu").classList.remove("hidden");
+}
+</script>
+
+</body>
+</html>
