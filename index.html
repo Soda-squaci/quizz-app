@@ -11,25 +11,34 @@ body {
     font-family: Arial;
 }
 
+/* 🔥 NÚT TO HƠN */
 button {
-    font-size: 18px;
-    margin: 10px;
+    font-size: 24px;
+    margin: 12px;
+    padding: 15px 25px;
+    border-radius: 10px;
+    cursor: pointer;
 }
 
+/* BOX CÂU HỎI */
 #box {
     background: white;
     color: black;
     padding: 20px;
-    font-size: 30px;
+    font-size: 40px;
     margin: 20px auto;
-    width: 200px;
+    width: 250px;
+    border-radius: 10px;
 }
 
+/* INPUT */
 input {
     background: orange;
-    font-size: 25px;
+    font-size: 30px;
     padding: 10px;
     text-align: center;
+    width: 200px;
+    border-radius: 8px;
 }
 
 .correct { background: lightgreen !important; }
@@ -50,7 +59,11 @@ th {
     color: white;
 }
 
-#result { white-space: pre-line; margin-top: 20px; }
+#result {
+    white-space: pre-line;
+    margin-top: 20px;
+    font-size: 22px;
+}
 
 .hidden { display: none; }
 </style>
@@ -69,7 +82,7 @@ th {
 <!-- GAME -->
 <div id="game" class="hidden">
     <div id="box"></div>
-    <input id="ans">
+    <input id="ans" autofocus>
     <br><br>
     <button onclick="check()">Trả lời</button>
 </div>
@@ -101,10 +114,12 @@ let startTime;
 function start() {
     document.getElementById("menu").classList.add("hidden");
     document.getElementById("game").classList.remove("hidden");
+    document.getElementById("result").innerHTML = "";
 
     done = 0;
     correct = 0;
     startTime = Date.now();
+
     next();
 }
 
@@ -118,26 +133,25 @@ function next() {
     b = Math.floor(Math.random()*90)+10;
 
     document.getElementById("box").innerText = a + " + " + b;
-    document.getElementById("ans").value = "";
-    document.getElementById("ans").className = "";
+    let input = document.getElementById("ans");
+    input.value = "";
+
+    input.className = "";
+    input.focus();
 }
 
 function check() {
     let input = document.getElementById("ans");
-    let val = parseInt(input.value);
+    let val = Number(input.value);
+
+    if (isNaN(val)) return;
 
     if (val === a + b) {
-        input.value = "✅";
-        input.className = "correct";
         correct++;
-    } else {
-        input.value = "❎";
-        input.className = "wrong";
     }
 
     done++;
-
-    setTimeout(next, 600);
+    setTimeout(next, 400);
 }
 
 function finish() {
@@ -145,26 +159,28 @@ function finish() {
     let avg = time / total;
     let percent = Math.round(correct/total*100);
 
-    document.body.style.background = "purple";
-
     document.getElementById("game").classList.add("hidden");
 
-    document.getElementById("result").innerText =
+    document.getElementById("result").innerHTML =
         "⏱️ " + time.toFixed(2) + "s\n" +
         "⚡ TB: " + avg.toFixed(2) + "s\n" +
-        "🎯 " + percent + "%";
+        "🎯 " + percent + "%\n\n" +
+        "<button onclick='backToMenu()'>🏠 Về menu</button>";
 
     save(time, avg, percent);
+}
+
+function backToMenu() {
+    document.getElementById("result").innerHTML = "";
+    document.getElementById("menu").classList.remove("hidden");
 }
 
 function save(time, avg, percent) {
     let data = JSON.parse(localStorage.getItem("history") || "[]");
 
     let now = new Date();
-    let date = now.toLocaleDateString();
-
     data.push({
-        date: date,
+        date: now.toLocaleDateString(),
         time: time.toFixed(2),
         avg: avg.toFixed(2),
         percent: percent
@@ -182,6 +198,11 @@ function showHistory() {
         "<tr><th>Ngày</th><th>Thời gian</th><th>TB</th><th>% đúng</th></tr>";
 
     let data = JSON.parse(localStorage.getItem("history") || "[]");
+
+    if (data.length === 0) {
+        table.innerHTML += "<tr><td colspan='4'>Chưa có dữ liệu</td></tr>";
+        return;
+    }
 
     data.forEach(d => {
         let row = table.insertRow();
