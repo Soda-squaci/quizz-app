@@ -11,13 +11,19 @@ body {
     font-family: Arial;
 }
 
-/* 🔥 NÚT TO HƠN */
+/* 🔥 NÚT CHUNG */
 button {
-    font-size: 24px;
-    margin: 12px;
-    padding: 15px 25px;
+    font-size: 22px;
+    margin: 10px;
+    padding: 12px 20px;
     border-radius: 10px;
     cursor: pointer;
+}
+
+/* 🔥 NÚT MENU TO HƠN */
+#menu button {
+    font-size: 34px;
+    padding: 22px 40px;
 }
 
 /* BOX CÂU HỎI */
@@ -25,10 +31,10 @@ button {
     background: white;
     color: black;
     padding: 20px;
-    font-size: 40px;
+    font-size: 42px;
     margin: 20px auto;
-    width: 250px;
-    border-radius: 10px;
+    width: 260px;
+    border-radius: 12px;
 }
 
 /* INPUT */
@@ -40,9 +46,6 @@ input {
     width: 200px;
     border-radius: 8px;
 }
-
-.correct { background: lightgreen !important; }
-.wrong { background: red !important; }
 
 table {
     margin: auto;
@@ -65,7 +68,9 @@ th {
     font-size: 22px;
 }
 
-.hidden { display: none; }
+.hidden {
+    display: none;
+}
 </style>
 </head>
 
@@ -111,6 +116,7 @@ let correct = 0;
 let a, b;
 let startTime;
 
+/* ▶️ BẮT ĐẦU */
 function start() {
     document.getElementById("menu").classList.add("hidden");
     document.getElementById("game").classList.remove("hidden");
@@ -123,41 +129,40 @@ function start() {
     next();
 }
 
+/* ➡️ CÂU TIẾP */
 function next() {
     if (done >= total) {
         finish();
         return;
     }
 
-    a = Math.floor(Math.random()*90)+10;
-    b = Math.floor(Math.random()*90)+10;
+    a = Math.floor(Math.random() * 90) + 10;
+    b = Math.floor(Math.random() * 90) + 10;
 
     document.getElementById("box").innerText = a + " + " + b;
+
     let input = document.getElementById("ans");
     input.value = "";
-
-    input.className = "";
     input.focus();
-}
-
-function check() {
-    let input = document.getElementById("ans");
-    let val = Number(input.value);
-
-    if (isNaN(val)) return;
-
-    if (val === a + b) {
-        correct++;
-    }
 
     done++;
-    setTimeout(next, 400);
 }
 
+/* ✔️ KIỂM TRA */
+function check() {
+    let val = Number(document.getElementById("ans").value);
+    if (isNaN(val)) return;
+
+    if (val === a + b) correct++;
+
+    setTimeout(next, 300);
+}
+
+/* 🏁 KẾT THÚC */
 function finish() {
-    let time = (Date.now() - startTime)/1000;
+    let time = (Date.now() - startTime) / 1000;
     let avg = time / total;
-    let percent = Math.round(correct/total*100);
+    let percent = Math.round((correct / total) * 100);
 
     document.getElementById("game").classList.add("hidden");
 
@@ -165,22 +170,17 @@ function finish() {
         "⏱️ " + time.toFixed(2) + "s\n" +
         "⚡ TB: " + avg.toFixed(2) + "s\n" +
         "🎯 " + percent + "%\n\n" +
-        "<button onclick='backToMenu()'>🏠 Về menu</button>";
+        "<button onclick='backMenu()'>🏠 Về menu</button>";
 
     save(time, avg, percent);
 }
 
-function backToMenu() {
-    document.getElementById("result").innerHTML = "";
-    document.getElementById("menu").classList.remove("hidden");
-}
-
+/* 💾 LƯU */
 function save(time, avg, percent) {
     let data = JSON.parse(localStorage.getItem("history") || "[]");
 
-    let now = new Date();
     data.push({
-        date: now.toLocaleDateString(),
+        date: new Date().toLocaleDateString(),
         time: time.toFixed(2),
         avg: avg.toFixed(2),
         percent: percent
@@ -189,6 +189,7 @@ function save(time, avg, percent) {
     localStorage.setItem("history", JSON.stringify(data));
 }
 
+/* 📊 HISTORY */
 function showHistory() {
     document.getElementById("menu").classList.add("hidden");
     document.getElementById("history").classList.remove("hidden");
@@ -213,8 +214,14 @@ function showHistory() {
     });
 }
 
+/* 🔙 MENU */
 function backMenu() {
     document.getElementById("history").classList.add("hidden");
+    document.getElementById("menu").classList.remove("hidden");
+}
+
+function backToMenu() {
+    document.getElementById("result").innerHTML = "";
     document.getElementById("menu").classList.remove("hidden");
 }
 </script>
