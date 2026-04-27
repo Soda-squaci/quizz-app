@@ -97,8 +97,8 @@ canvas {
 <div id="history" class="hidden">
     <h3>Lịch sử 📊</h3>
 
-    <button onclick="switchMode('table')">📋 Bảng</button>
-    <button onclick="switchMode('graph')">📈 Đồ thị</button>
+    <button onclick="showTable()">📋 Bảng</button>
+    <button onclick="showGraph()">📈 Đồ thị</button>
 
     <table id="table">
         <tr>
@@ -125,7 +125,7 @@ let correct = 0;
 let a, b;
 let startTime;
 
-/* PAN STATE */
+/* DRAG */
 let offsetX = 0;
 let offsetY = 0;
 let isDragging = false;
@@ -215,23 +215,14 @@ function save(time, avg, percent) {
 function showHistory() {
     document.getElementById("menu").classList.add("hidden");
     document.getElementById("history").classList.remove("hidden");
-    switchMode("table");
-}
-
-function switchMode(mode) {
-    if (mode === "table") {
-        document.getElementById("table").style.display = "table";
-        document.getElementById("chartContainer").style.display = "none";
-        showTable();
-    } else {
-        document.getElementById("table").style.display = "none";
-        document.getElementById("chartContainer").style.display = "block";
-        showGraph();
-    }
+    showTable();
 }
 
 /* TABLE */
 function showTable() {
+    document.getElementById("table").style.display = "table";
+    document.getElementById("chartContainer").style.display = "none";
+
     let table = document.getElementById("table");
     table.innerHTML =
         "<tr><th>Ngày</th><th>Thời gian</th><th>TB</th><th>% đúng</th></tr>";
@@ -272,6 +263,10 @@ function showGraph() {
 
     let stepX = data.length > 1 ? usableW / (data.length - 1) : 0;
 
+    /* IMPORTANT: move whole graph */
+    ctx.save();
+    ctx.translate(offsetX, offsetY);
+
     /* GRID + Y AXIS */
     ctx.strokeStyle = "#ddd";
     ctx.fillStyle = "black";
@@ -295,8 +290,8 @@ function showGraph() {
         ctx.lineWidth = 2;
 
         data.forEach((d, i) => {
-            let x = padL + i * stepX + offsetX;
-            let y = padT + usableH - (d[key] / scale) * usableH + offsetY;
+            let x = padL + i * stepX;
+            let y = padT + usableH - (d[key] / scale) * usableH;
 
             if (i === 0) ctx.moveTo(x, y);
             else ctx.lineTo(x, y);
@@ -305,8 +300,8 @@ function showGraph() {
         ctx.stroke();
 
         data.forEach((d, i) => {
-            let x = padL + i * stepX + offsetX;
-            let y = padT + usableH - (d[key] / scale) * usableH + offsetY;
+            let x = padL + i * stepX;
+            let y = padT + usableH - (d[key] / scale) * usableH;
 
             ctx.fillStyle = color;
             ctx.beginPath();
@@ -318,9 +313,20 @@ function showGraph() {
     drawLine("time", "red", 10);
     drawLine("avg", "green", 10);
     drawLine("percent", "blue", 100);
+
+    /* DATE under graph */
+    data.forEach((d, i) => {
+        let x = padL + i * stepX;
+        let y = padT + usableH + 25;
+
+        ctx.fillStyle = "black";
+        ctx.fillText(d.date, x - 20, y);
+    });
+
+    ctx.restore();
 }
 
-/* 🖱 DRAG 2D */
+/* DRAG 2D */
 const canvas = document.getElementById("chart");
 
 canvas.addEventListener("mousedown", e => {
