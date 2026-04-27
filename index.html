@@ -11,12 +11,12 @@ body {
     font-family: Arial;
 }
 
+/* BUTTON */
 button {
     font-size: 22px;
     margin: 10px;
     padding: 12px 20px;
     border-radius: 10px;
-    cursor: pointer;
 }
 
 /* MENU TO */
@@ -62,15 +62,16 @@ th {
     color: white;
 }
 
-.hidden {
-    display: none;
-}
-
-/* CANVAS */
+/* GRAPH */
 canvas {
     background: white;
     margin-top: 20px;
     border-radius: 10px;
+}
+
+/* HIDE */
+.hidden {
+    display: none;
 }
 </style>
 </head>
@@ -112,20 +113,21 @@ canvas {
         </tr>
     </table>
 
-    <canvas id="chart" width="600" height="350"></canvas>
+    <canvas id="chart" width="650" height="450"></canvas>
 
     <br>
     <button onclick="backMenu()">Quay lại</button>
 </div>
 
 <script>
+
 let total = 10;
 let done = 0;
 let correct = 0;
 let a, b;
 let startTime;
 
-/* GAME */
+/* ▶ START */
 function startGame() {
     document.getElementById("menu").classList.add("hidden");
     document.getElementById("game").classList.remove("hidden");
@@ -138,6 +140,7 @@ function startGame() {
     nextQuestion();
 }
 
+/* ➡ NEXT */
 function nextQuestion() {
     if (done >= total) {
         finishGame();
@@ -151,12 +154,13 @@ function nextQuestion() {
 
     let input = document.getElementById("answer");
     input.value = "";
+    input.style.background = "orange";
     input.focus();
 
     done++;
 }
 
-/* ✔ CHECK + HIỆN ✅ ❎ */
+/* ✔ CHECK */
 function check() {
     let input = document.getElementById("answer");
     let val = Number(input.value);
@@ -172,10 +176,7 @@ function check() {
         input.style.background = "red";
     }
 
-    setTimeout(() => {
-        input.style.background = "orange";
-        nextQuestion();
-    }, 500);
+    setTimeout(nextQuestion, 500);
 }
 
 /* ENTER */
@@ -259,12 +260,20 @@ function showGraph() {
 
     let w = canvas.width;
     let h = canvas.height;
+
+    let top = 20;
+    let bottom = 50;
+    let usableH = h - top - bottom;
+
     let stepX = w / (data.length + 1);
 
     /* GRID */
     ctx.strokeStyle = "#ddd";
+    ctx.lineWidth = 1;
+
     for (let i = 0; i <= 10; i++) {
-        let y = (h / 10) * i;
+        let y = top + (usableH / 10) * i;
+
         ctx.beginPath();
         ctx.moveTo(0, y);
         ctx.lineTo(w, y);
@@ -278,7 +287,7 @@ function showGraph() {
 
     data.forEach((d, i) => {
         let x = (i + 1) * stepX;
-        let y = h - (d.percent / 100) * h;
+        let y = top + usableH - (d.percent / 100) * usableH;
 
         if (i === 0) ctx.moveTo(x, y);
         else ctx.lineTo(x, y);
@@ -286,20 +295,19 @@ function showGraph() {
 
     ctx.stroke();
 
-    /* POINTS */
+    /* POINTS + DATE */
     data.forEach((d, i) => {
         let x = (i + 1) * stepX;
-        let y = h - (d.percent / 100) * h;
+        let y = top + usableH - (d.percent / 100) * usableH;
 
         ctx.beginPath();
-        ctx.arc(x, y, 5, 0, Math.PI * 2);
+        ctx.arc(x, y, 6, 0, Math.PI * 2);
         ctx.fillStyle = "red";
         ctx.fill();
 
-        /* DATE */
         ctx.fillStyle = "black";
         ctx.font = "12px Arial";
-        ctx.fillText(d.date, x - 20, h - 5);
+        ctx.fillText(d.date, x - 25, h - 10);
     });
 }
 
@@ -308,6 +316,7 @@ function backMenu() {
     document.getElementById("history").classList.add("hidden");
     document.getElementById("menu").classList.remove("hidden");
 }
+
 </script>
 
 </body>
