@@ -268,7 +268,6 @@ function showGraph() {
 
     if (data.length === 0) return;
 
-    /* 📏 rộng theo data */
     canvas.width = 500 + data.length * 90;
 
     let w = canvas.width;
@@ -277,17 +276,15 @@ function showGraph() {
     let padL = 70;
     let padR = 40;
     let padT = 40;
-    let padB = 80;
+    let padB = 70;
 
     let usableW = w - padL - padR;
     let usableH = h - padT - padB;
 
     let stepX = data.length > 1 ? usableW / (data.length - 1) : 0;
 
-    /* ================= GRID ================= */
+    /* GRID */
     ctx.strokeStyle = "#ddd";
-    ctx.lineWidth = 1;
-
     for (let i = 0; i <= 10; i++) {
         let y = padT + (usableH / 10) * i;
         ctx.beginPath();
@@ -296,106 +293,50 @@ function showGraph() {
         ctx.stroke();
     }
 
-    /* ================= TIME (ĐỎ) ================= */
-    ctx.beginPath();
-    ctx.strokeStyle = "red";
-    ctx.lineWidth = 2;
-
-    data.forEach((d, i) => {
-        let x = padL + i * stepX;
-        let y = padT + usableH - (d.time / 10) * usableH;
-
-        if (i === 0) ctx.moveTo(x, y);
-        else ctx.lineTo(x, y);
-    });
-
-    ctx.stroke();
-
-    /* chấm + số time */
-    data.forEach((d, i) => {
-        let x = padL + i * stepX;
-        let y = padT + usableH - (d.time / 10) * usableH;
-
-        ctx.fillStyle = "red";
+    /* helper vẽ 1 line */
+    function drawLine(key, color) {
         ctx.beginPath();
-        ctx.arc(x, y, 6, 0, Math.PI * 2);
-        ctx.fill();
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 2;
 
-        ctx.fillStyle = "red";
-        ctx.font = "12px Arial";
-        ctx.fillText(d.time + "s", x - 15, y - 10);
-    });
+        data.forEach((d, i) => {
+            let x = padL + i * stepX;
+            let y = padT + usableH - (d[key] / (key === "percent" ? 100 : 10)) * usableH;
 
-    /* ================= AVG (XANH LÁ) ================= */
-    ctx.beginPath();
-    ctx.strokeStyle = "green";
-    ctx.lineWidth = 2;
+            if (i === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+        });
 
-    data.forEach((d, i) => {
-        let x = padL + i * stepX;
-        let y = padT + usableH - (d.avg / 10) * usableH;
+        ctx.stroke();
 
-        if (i === 0) ctx.moveTo(x, y);
-        else ctx.lineTo(x, y);
-    });
+        /* points */
+        data.forEach((d, i) => {
+            let x = padL + i * stepX;
+            let y = padT + usableH - (d[key] / (key === "percent" ? 100 : 10)) * usableH;
 
-    ctx.stroke();
+            ctx.fillStyle = color;
+            ctx.beginPath();
+            ctx.arc(x, y, 5, 0, Math.PI * 2);
+            ctx.fill();
+        });
+    }
 
-    /* chấm + số avg */
-    data.forEach((d, i) => {
-        let x = padL + i * stepX;
-        let y = padT + usableH - (d.avg / 10) * usableH;
+    /* 3 đường */
+    drawLine("time", "red");
+    drawLine("avg", "green");
+    drawLine("percent", "blue");
 
-        ctx.fillStyle = "green";
-        ctx.beginPath();
-        ctx.arc(x, y, 6, 0, Math.PI * 2);
-        ctx.fill();
+    /* CHỈ HIỆN SỐ KHI ÍT DỮ LIỆU (tránh rối) */
+    if (data.length <= 6) {
+        data.forEach((d, i) => {
+            let x = padL + i * stepX;
 
-        ctx.fillStyle = "green";
-        ctx.font = "12px Arial";
-        ctx.fillText(d.avg + "s", x - 15, y - 10);
-    });
-
-    /* ================= % (XANH DƯƠNG) ================= */
-    ctx.beginPath();
-    ctx.strokeStyle = "blue";
-    ctx.lineWidth = 3;
-
-    data.forEach((d, i) => {
-        let x = padL + i * stepX;
-        let y = padT + usableH - (d.percent / 100) * usableH;
-
-        if (i === 0) ctx.moveTo(x, y);
-        else ctx.lineTo(x, y);
-    });
-
-    ctx.stroke();
-
-    /* chấm + số % */
-    data.forEach((d, i) => {
-        let x = padL + i * stepX;
-        let y = padT + usableH - (d.percent / 100) * usableH;
-
-        ctx.fillStyle = "blue";
-        ctx.beginPath();
-        ctx.arc(x, y, 6, 0, Math.PI * 2);
-        ctx.fill();
-
-        ctx.fillStyle = "blue";
-        ctx.font = "12px Arial";
-        ctx.fillText(d.percent + "%", x - 15, y - 10);
-    });
-
-    /* ================= DATE ================= */
-    data.forEach((d, i) => {
-        let x = padL + i * stepX;
-
-        ctx.fillStyle = "black";
-        ctx.font = "12px Arial";
-        ctx.fillText(d.date, x - 25, h - 15);
-    });
+            ctx.fillStyle = "black";
+            ctx.font = "12px Arial";
+            ctx.fillText(d.date, x - 20, h - 15);
+        });
+    }
 }
-
 /* MENU */
 function backMenu() {
     document.getElementById("history").classList.add("hidden");
