@@ -19,7 +19,7 @@ button {
     border-radius: 10px;
 }
 
-/* MENU TO */
+/* MENU */
 #menu button {
     font-size: 34px;
     padding: 20px 35px;
@@ -62,11 +62,18 @@ th {
     color: white;
 }
 
-/* GRAPH */
-canvas {
+/* GRAPH SCROLL AREA */
+#chartContainer {
+    width: 90%;
+    margin: auto;
+    overflow-x: auto;
     background: white;
-    margin-top: 20px;
     border-radius: 10px;
+}
+
+/* CANVAS */
+canvas {
+    display: block;
 }
 
 /* HIDE */
@@ -113,7 +120,10 @@ canvas {
         </tr>
     </table>
 
-    <canvas id="chart" width="650" height="450"></canvas>
+    <!-- SCROLL GRAPH -->
+    <div id="chartContainer">
+        <canvas id="chart" height="450"></canvas>
+    </div>
 
     <br>
     <button onclick="backMenu()">Quay lại</button>
@@ -127,7 +137,7 @@ let correct = 0;
 let a, b;
 let startTime;
 
-/* ▶ START */
+/* START */
 function startGame() {
     document.getElementById("menu").classList.add("hidden");
     document.getElementById("game").classList.remove("hidden");
@@ -140,7 +150,7 @@ function startGame() {
     nextQuestion();
 }
 
-/* ➡ NEXT */
+/* NEXT */
 function nextQuestion() {
     if (done >= total) {
         finishGame();
@@ -160,7 +170,7 @@ function nextQuestion() {
     done++;
 }
 
-/* ✔ CHECK */
+/* CHECK */
 function check() {
     let input = document.getElementById("answer");
     let val = Number(input.value);
@@ -176,7 +186,7 @@ function check() {
         input.style.background = "red";
     }
 
-    setTimeout(nextQuestion, 500);
+    setTimeout(nextQuestion, 400);
 }
 
 /* ENTER */
@@ -228,7 +238,7 @@ function showHistory() {
 /* TABLE */
 function showTable() {
     document.getElementById("table").style.display = "table";
-    document.getElementById("chart").style.display = "none";
+    document.getElementById("chartContainer").style.display = "none";
 
     let table = document.getElementById("table");
     table.innerHTML =
@@ -245,10 +255,10 @@ function showTable() {
     });
 }
 
-/* GRAPH */
+/* GRAPH SCROLL + WIDE */
 function showGraph() {
     document.getElementById("table").style.display = "none";
-    document.getElementById("chart").style.display = "block";
+    document.getElementById("chartContainer").style.display = "block";
 
     let data = JSON.parse(localStorage.getItem("history") || "[]");
     let canvas = document.getElementById("chart");
@@ -258,42 +268,41 @@ function showGraph() {
 
     if (data.length === 0) return;
 
+    /* 🔥 WIDTH THEO DATA */
+    canvas.width = 500 + data.length * 90;
+
     let w = canvas.width;
     let h = canvas.height;
 
-    /* 🔥 GIÃN THẬT MẠNH */
-    let paddingLeft = 60;
-    let paddingRight = 40;
-    let paddingTop = 40;
-    let paddingBottom = 80;
+    let padL = 60;
+    let padR = 40;
+    let padT = 40;
+    let padB = 70;
 
-    let usableW = w - paddingLeft - paddingRight;
-    let usableH = h - paddingTop - paddingBottom;
+    let usableW = w - padL - padR;
+    let usableH = h - padT - padB;
 
-    /* 👉 GIÃN KHOẢNG CÁCH GẤP ĐÔI */
     let stepX = data.length > 1 ? usableW / (data.length - 1) : 0;
 
-    /* 📊 GRID THOÁNG */
-    ctx.strokeStyle = "#e0e0e0";
-    ctx.lineWidth = 1;
+    /* GRID */
+    ctx.strokeStyle = "#ddd";
 
     for (let i = 0; i <= 10; i++) {
-        let y = paddingTop + (usableH / 10) * i;
-
+        let y = padT + (usableH / 10) * i;
         ctx.beginPath();
-        ctx.moveTo(paddingLeft, y);
-        ctx.lineTo(w - paddingRight, y);
+        ctx.moveTo(0, y);
+        ctx.lineTo(w, y);
         ctx.stroke();
     }
 
-    /* 📈 LINE */
+    /* LINE */
     ctx.beginPath();
     ctx.strokeStyle = "blue";
     ctx.lineWidth = 3;
 
     data.forEach((d, i) => {
-        let x = paddingLeft + i * stepX;
-        let y = paddingTop + usableH - (d.percent / 100) * usableH;
+        let x = padL + i * stepX;
+        let y = padT + usableH - (d.percent / 100) * usableH;
 
         if (i === 0) ctx.moveTo(x, y);
         else ctx.lineTo(x, y);
@@ -301,25 +310,19 @@ function showGraph() {
 
     ctx.stroke();
 
-    /* 🔴 POINTS */
+    /* POINTS + DATE */
     data.forEach((d, i) => {
-        let x = paddingLeft + i * stepX;
-        let y = paddingTop + usableH - (d.percent / 100) * usableH;
+        let x = padL + i * stepX;
+        let y = padT + usableH - (d.percent / 100) * usableH;
 
         ctx.beginPath();
-        ctx.arc(x, y, 7, 0, Math.PI * 2);
+        ctx.arc(x, y, 6, 0, Math.PI * 2);
         ctx.fillStyle = "red";
         ctx.fill();
 
-        /* 📅 NGÀY GIÃN RA, KHÔNG DÍNH */
         ctx.fillStyle = "black";
-        ctx.font = "13px Arial";
-
-        ctx.save();
-        ctx.translate(x, h - 25);
-        ctx.rotate(-0.3); // hơi nghiêng cho đỡ đè nhau
-        ctx.fillText(d.date, -20, 0);
-        ctx.restore();
+        ctx.font = "12px Arial";
+        ctx.fillText(d.date, x - 20, h - 15);
     });
 }
 
