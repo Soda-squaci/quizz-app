@@ -115,10 +115,11 @@ canvas {
 </div>
 
 <script>
-// FIX: lấy element
+
+/* ===== FIX ELEMENT ===== */
 const menu = document.getElementById("menu");
 const game = document.getElementById("game");
-const history = document.getElementById("history");
+const historyDiv = document.getElementById("history");
 const table = document.getElementById("table");
 const chartContainer = document.getElementById("chartContainer");
 const box = document.getElementById("box");
@@ -140,9 +141,33 @@ let lastY = 0;
 let canvas;
 let graphMode = "avg";
 
-/* LOAD */
+/* LOAD + DRAG */
 window.addEventListener("load", () => {
     canvas = document.getElementById("chart");
+
+    canvas.addEventListener("mousedown", e => {
+        isDragging = true;
+        lastX = e.clientX;
+        lastY = e.clientY;
+        canvas.style.cursor = "grabbing";
+    });
+
+    window.addEventListener("mouseup", () => {
+        isDragging = false;
+        canvas.style.cursor = "grab";
+    });
+
+    window.addEventListener("mousemove", e => {
+        if (!isDragging) return;
+
+        offsetX += e.clientX - lastX;
+        offsetY += e.clientY - lastY;
+
+        lastX = e.clientX;
+        lastY = e.clientY;
+
+        showGraph();
+    });
 });
 
 /* GAME */
@@ -225,7 +250,7 @@ function save(time, avg, percent) {
 /* HISTORY */
 function showHistory() {
     menu.classList.add("hidden");
-    history.classList.remove("hidden");
+    historyDiv.classList.remove("hidden");
     showTable();
 }
 
@@ -256,6 +281,8 @@ function setGraphMode(mode) {
 
 /* GRAPH */
 function showGraph() {
+
+    if (!canvas) return;
 
     table.style.display = "none";
     chartContainer.style.display = "block";
@@ -353,30 +380,9 @@ function showGraph() {
     });
 }
 
-/* DRAG */
-canvas.addEventListener("mousedown",e=>{
-    isDragging=true;
-    lastX=e.clientX;
-    lastY=e.clientY;
-});
-
-window.addEventListener("mouseup",()=>isDragging=false);
-
-window.addEventListener("mousemove",e=>{
-    if(!isDragging) return;
-
-    offsetX+=e.clientX-lastX;
-    offsetY+=e.clientY-lastY;
-
-    lastX=e.clientX;
-    lastY=e.clientY;
-
-    showGraph();
-});
-
 /* BACK */
 function backMenu(){
-    history.classList.add("hidden");
+    historyDiv.classList.add("hidden");
     menu.classList.remove("hidden");
 }
 
