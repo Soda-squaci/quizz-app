@@ -62,6 +62,7 @@ th {
     margin: auto;
     background: white;
     border-radius: 10px;
+    overflow-x: auto;
 }
 
 .hidden {
@@ -98,6 +99,10 @@ th {
     <button onclick="setGraphMode('avg')">⏱️ TB</button>
     <button onclick="setGraphMode('percent')">🎯 %</button>
 
+    <br><br>
+    Zoom:
+    <input type="range" id="zoomSlider" min="1" max="3" step="0.1" value="1">
+
     <table id="table"></table>
 
     <div id="chartContainer">
@@ -124,7 +129,15 @@ let done = 0;
 let correct = 0;
 let a, b;
 let startTime;
+
 let graphMode = "avg";
+let zoom = 1;
+
+/* ZOOM */
+document.getElementById("zoomSlider").addEventListener("input", e => {
+    zoom = Number(e.target.value);
+    showGraph();
+});
 
 /* GAME */
 function startGame() {
@@ -244,7 +257,7 @@ function showGraph() {
     let data = JSON.parse(localStorage.getItem("history") || "[]");
     let ctx = canvas.getContext("2d");
 
-    canvas.width = 800 + data.length * 80;
+    canvas.width = (800 + data.length * 80) * zoom;
     canvas.height = 450;
 
     ctx.clearRect(0,0,canvas.width,canvas.height);
@@ -259,21 +272,20 @@ function showGraph() {
     let usableH = canvas.height - padT - padB;
 
     let stepX = data.length > 1 ? usableW / (data.length - 1) : 0;
+    stepX *= zoom;
 
-    /* ===== SCALE AUTO ===== */
+    /* SCALE */
     let maxVal;
-
     if (graphMode === "percent") {
         maxVal = 100;
     } else {
         maxVal = Math.max(...data.map(d => d.avg));
-        maxVal = Math.ceil(maxVal * 2) / 2; // làm tròn 0.5
+        maxVal = Math.ceil(maxVal * 2) / 2;
     }
 
     let stepY = graphMode === "percent" ? 5 : 0.5;
     let steps = maxVal / stepY;
 
-    /* GRID */
     ctx.strokeStyle = "#ddd";
     ctx.fillStyle = "black";
     ctx.font = "12px Arial";
@@ -305,24 +317,26 @@ function showGraph() {
 
     ctx.stroke();
 
-    /* POINT + LABEL */
+    /* POINT + TEXT */
     data.forEach((d,i)=>{
         let x = padL + i * stepX;
         let val = graphMode === "percent" ? d.percent : d.avg;
         let y = padT + usableH - (val / maxVal) * usableH;
 
         ctx.beginPath();
-        ctx.arc(x,y,4,0,Math.PI*2);
+        ctx.arc(x,y,5,0,Math.PI*2);
         ctx.fill();
 
-        // ngày
-        ctx.fillStyle="black";
-        ctx.fillText(d.date, x-20, padT + usableH + 20);
-
-        // giá trị
+        // text trên chấm
+        ctx.font = "bold 14px Arial";
         let txt = graphMode==="percent" ? d.percent+"%" : d.avg+"s";
         ctx.fillStyle = graphMode==="percent" ? "blue":"green";
-        ctx.fillText(txt, x-15, padT + usableH + 35);
+        ctx.fillText(txt, x-15, y-10);
+
+        // ngày dưới
+        ctx.fillStyle="black";
+        ctx.font="12px Arial";
+        ctx.fillText(d.date, x-20, padT + usableH + 25);
     });
 }
 
