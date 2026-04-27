@@ -63,11 +63,11 @@ th {
     overflow: hidden;
     background: white;
     border-radius: 10px;
-    cursor: grab;
 }
 
 canvas {
     display: block;
+    cursor: grab;
 }
 
 .hidden {
@@ -125,10 +125,12 @@ let correct = 0;
 let a, b;
 let startTime;
 
-/* DRAG STATE */
+/* PAN STATE */
 let offsetX = 0;
+let offsetY = 0;
 let isDragging = false;
 let lastX = 0;
+let lastY = 0;
 
 /* GAME */
 function startGame() {
@@ -174,10 +176,12 @@ function check() {
     setTimeout(nextQuestion, 300);
 }
 
+/* ENTER */
 document.getElementById("answer").addEventListener("keydown", e => {
     if (e.key === "Enter") check();
 });
 
+/* FINISH */
 function finishGame() {
     let time = (Date.now() - startTime) / 1000;
     let avg = time / total;
@@ -249,6 +253,10 @@ function showGraph() {
     let canvas = document.getElementById("chart");
     let ctx = canvas.getContext("2d");
 
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    if (data.length === 0) return;
+
     canvas.width = 500 + data.length * 90;
 
     let w = canvas.width;
@@ -264,8 +272,6 @@ function showGraph() {
 
     let stepX = data.length > 1 ? usableW / (data.length - 1) : 0;
 
-    ctx.clearRect(0, 0, w, h);
-
     /* GRID + Y AXIS */
     ctx.strokeStyle = "#ddd";
     ctx.fillStyle = "black";
@@ -273,14 +279,14 @@ function showGraph() {
 
     for (let i = 0; i <= 10; i++) {
         let y = padT + (usableH / 10) * i;
-        let value = Math.round((100 - i * 10));
+        let value = Math.round(100 - i * 10);
 
         ctx.beginPath();
         ctx.moveTo(padL, y);
         ctx.lineTo(w - padR, y);
         ctx.stroke();
 
-        ctx.fillText(value, 10, y + 4); // 👈 số cột dọc
+        ctx.fillText(value, 10, y + 4);
     }
 
     function drawLine(key, color, scale) {
@@ -290,7 +296,7 @@ function showGraph() {
 
         data.forEach((d, i) => {
             let x = padL + i * stepX + offsetX;
-            let y = padT + usableH - (d[key] / scale) * usableH;
+            let y = padT + usableH - (d[key] / scale) * usableH + offsetY;
 
             if (i === 0) ctx.moveTo(x, y);
             else ctx.lineTo(x, y);
@@ -300,7 +306,7 @@ function showGraph() {
 
         data.forEach((d, i) => {
             let x = padL + i * stepX + offsetX;
-            let y = padT + usableH - (d[key] / scale) * usableH;
+            let y = padT + usableH - (d[key] / scale) * usableH + offsetY;
 
             ctx.fillStyle = color;
             ctx.beginPath();
@@ -314,21 +320,29 @@ function showGraph() {
     drawLine("percent", "blue", 100);
 }
 
-/* 🖱 DRAG */
-const canvas = document.getElementById("chartContainer");
+/* 🖱 DRAG 2D */
+const canvas = document.getElementById("chart");
 
 canvas.addEventListener("mousedown", e => {
     isDragging = true;
     lastX = e.clientX;
+    lastY = e.clientY;
+    canvas.style.cursor = "grabbing";
 });
 
-window.addEventListener("mouseup", () => isDragging = false);
+window.addEventListener("mouseup", () => {
+    isDragging = false;
+    canvas.style.cursor = "grab";
+});
 
 window.addEventListener("mousemove", e => {
     if (!isDragging) return;
 
     offsetX += (e.clientX - lastX);
+    offsetY += (e.clientY - lastY);
+
     lastX = e.clientX;
+    lastY = e.clientY;
 
     showGraph();
 });
