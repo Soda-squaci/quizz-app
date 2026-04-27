@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Luyện Toán PRO</title>
+<title>Luyện Toán</title>
 
 <style>
 body {
@@ -60,14 +60,13 @@ th {
 #chartContainer {
     width: 90%;
     margin: auto;
-    overflow: auto;
+    overflow-x: auto;
     background: white;
     border-radius: 10px;
 }
 
 canvas {
     display: block;
-    cursor: grab;
 }
 
 .hidden {
@@ -78,7 +77,7 @@ canvas {
 
 <body>
 
-<h2>Luyện toán 🚀</h2>
+<h2>Luyện toán 🐍</h2>
 
 <div id="menu">
     <button onclick="startGame()">Bắt đầu</button>
@@ -115,9 +114,11 @@ canvas {
 </div>
 
 <script>
+
+// ELEMENT
 const menu = document.getElementById("menu");
 const game = document.getElementById("game");
-const history = document.getElementById("history");
+const historyDiv = document.getElementById("history");
 const table = document.getElementById("table");
 const chartContainer = document.getElementById("chartContainer");
 const box = document.getElementById("box");
@@ -130,14 +131,6 @@ let done = 0;
 let correct = 0;
 let a, b;
 let startTime;
-
-let offsetX = 0;
-let isDragging = false;
-let lastX = 0;
-
-let scale = 1;
-let mouseX = 0;
-let mouseY = 0;
 
 let graphMode = "avg";
 
@@ -221,10 +214,11 @@ function save(time, avg, percent) {
 /* HISTORY */
 function showHistory() {
     menu.classList.add("hidden");
-    history.classList.remove("hidden");
+    historyDiv.classList.remove("hidden");
     showTable();
 }
 
+/* TABLE */
 function showTable() {
     table.style.display = "table";
     chartContainer.style.display = "none";
@@ -243,6 +237,7 @@ function showTable() {
     });
 }
 
+/* MODE */
 function setGraphMode(mode) {
     graphMode = mode;
     showGraph();
@@ -250,49 +245,46 @@ function setGraphMode(mode) {
 
 /* GRAPH */
 function showGraph() {
+
     table.style.display = "none";
     chartContainer.style.display = "block";
 
     let data = JSON.parse(localStorage.getItem("history") || "[]");
     let ctx = canvas.getContext("2d");
 
-    canvas.width = 800 + data.length * 90;
+    canvas.width = 800 + data.length * 100;
     canvas.height = 450;
 
-    ctx.setTransform(1,0,0,1,0,0);
     ctx.clearRect(0,0,canvas.width,canvas.height);
 
     if (data.length === 0) return;
 
     let padL = 70;
     let padT = 40;
-    let padB = 70;
+    let padB = 90;
 
     let usableW = canvas.width - padL - 40;
     let usableH = canvas.height - padT - padB;
 
-    let stepX = data.length > 1 ? usableW / (data.length - 1) : 0;
+    let stepX = usableW / (data.length - 1 || 1);
 
-    let maxValue = graphMode === "percent"
-        ? 100
-        : Math.max(...data.map(d => d.avg));
+    // AUTO SCALE
+    let maxVal = 0;
+    data.forEach(d=>{
+        let val = graphMode === "percent" ? d.percent : d.avg;
+        if(val > maxVal) maxVal = val;
+    });
 
-    if (maxValue === 0) maxValue = 1;
+    let scaleMax = Math.ceil(maxVal * 1.2);
 
-    ctx.save();
-    ctx.translate(offsetX, 0);
-    ctx.scale(scale, scale);
-
-    /* GRID */
+    // GRID
     ctx.strokeStyle = "#ddd";
     ctx.fillStyle = "black";
     ctx.font = "12px Arial";
 
     for (let i = 0; i <= 10; i++) {
         let y = padT + (usableH / 10) * i;
-        let value = graphMode === "percent"
-            ? 100 - i * 10
-            : (maxValue - (maxValue/10)*i).toFixed(1);
+        let value = Math.round(scaleMax - i * scaleMax / 10);
 
         ctx.beginPath();
         ctx.moveTo(padL, y);
@@ -302,97 +294,55 @@ function showGraph() {
         ctx.fillText(value, 10, y + 4);
     }
 
-    function drawLine() {
-        ctx.beginPath();
-        ctx.strokeStyle = graphMode === "avg" ? "green" : "blue";
+    // LINE
+    ctx.beginPath();
+    ctx.strokeStyle = graphMode === "percent" ? "blue" : "green";
+    ctx.lineWidth = 2;
 
-        data.forEach((d,i)=>{
-            let x = padL + i * stepX;
-            let y = padT + usableH - (d[graphMode]/maxValue)*usableH;
-
-            if(i===0) ctx.moveTo(x,y);
-            else ctx.lineTo(x,y);
-        });
-
-        ctx.stroke();
-
-        data.forEach((d,i)=>{
-            let x = padL + i * stepX;
-            let y = padT + usableH - (d[graphMode]/maxValue)*usableH;
-
-            ctx.beginPath();
-            ctx.arc(x,y,5,0,Math.PI*2);
-            ctx.fill();
-        });
-    }
-
-    drawLine();
-
-    /* TOOLTIP */
     data.forEach((d,i)=>{
+        let val = graphMode === "percent" ? d.percent : d.avg;
+
         let x = padL + i * stepX;
-        let y = padT + usableH - (d[graphMode]/maxValue)*usableH;
+        let y = padT + usableH - (val/scaleMax)*usableH;
 
-        let dx = mouseX/scale - offsetX - x;
-        let dy = mouseY/scale - y;
-
-        if (Math.abs(dx) < 10 && Math.abs(dy) < 10) {
-            ctx.fillStyle = "black";
-            ctx.fillRect(x + 10, y - 30, 120, 30);
-
-            ctx.fillStyle = "white";
-            let text = graphMode === "percent"
-                ? d.percent + "%"
-                : d.avg + "s";
-
-            ctx.fillText(d.date + " | " + text, x + 15, y - 10);
-        }
+        if(i===0) ctx.moveTo(x,y);
+        else ctx.lineTo(x,y);
     });
 
-    ctx.restore();
+    ctx.stroke();
+
+    // POINT + LABEL
+    data.forEach((d,i)=>{
+        let val = graphMode === "percent" ? d.percent : d.avg;
+
+        let x = padL + i * stepX;
+        let y = padT + usableH - (val/scaleMax)*usableH;
+
+        ctx.fillStyle = graphMode === "percent" ? "blue" : "green";
+
+        ctx.beginPath();
+        ctx.arc(x,y,5,0,Math.PI*2);
+        ctx.fill();
+
+        // VALUE trên điểm
+        ctx.fillText(
+            graphMode === "percent" ? val+"%" : val+"s",
+            x-15,
+            y-10
+        );
+
+        // DATE dưới
+        ctx.fillStyle = "black";
+        ctx.fillText(d.date, x-30, padT + usableH + 20);
+    });
 }
-
-/* DRAG */
-canvas.addEventListener("mousedown", e=>{
-    isDragging = true;
-    lastX = e.clientX;
-});
-
-window.addEventListener("mouseup", ()=> isDragging=false);
-
-window.addEventListener("mousemove", e=>{
-    if(!isDragging) return;
-
-    offsetX += e.clientX - lastX;
-    lastX = e.clientX;
-
-    showGraph();
-});
-
-/* ZOOM */
-canvas.addEventListener("wheel", e=>{
-    e.preventDefault();
-
-    if (e.deltaY < 0) scale *= 1.1;
-    else scale /= 1.1;
-
-    scale = Math.max(0.5, Math.min(3, scale));
-
-    showGraph();
-});
-
-/* MOUSE TRACK */
-canvas.addEventListener("mousemove", e=>{
-    const rect = canvas.getBoundingClientRect();
-    mouseX = e.clientX - rect.left;
-    mouseY = e.clientY - rect.top;
-});
 
 /* BACK */
 function backMenu(){
-    history.classList.add("hidden");
+    historyDiv.classList.add("hidden");
     menu.classList.remove("hidden");
 }
+
 </script>
 
 </body>
