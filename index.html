@@ -100,6 +100,11 @@ canvas {
     <button onclick="showTable()">📋 Bảng</button>
     <button onclick="showGraph()">📈 Đồ thị</button>
 
+    <br>
+    <!-- MODE -->
+    <button onclick="setGraphMode('avg')">⏱️ TB</button>
+    <button onclick="setGraphMode('percent')">🎯 % đúng</button>
+
     <table id="table">
         <tr>
             <th>Ngày</th>
@@ -132,8 +137,9 @@ let lastX = 0;
 let lastY = 0;
 
 let canvas;
+let graphMode = "avg";
 
-/* LOAD CANVAS SAFE */
+/* LOAD */
 window.addEventListener("load", () => {
     canvas = document.getElementById("chart");
 });
@@ -182,7 +188,6 @@ function check() {
     setTimeout(nextQuestion, 300);
 }
 
-/* ENTER */
 document.getElementById("answer").addEventListener("keydown", e => {
     if (e.key === "Enter") check();
 });
@@ -244,10 +249,18 @@ function showTable() {
     });
 }
 
+/* MODE */
+function setGraphMode(mode) {
+    graphMode = mode;
+    showGraph();
+}
+
 /* GRAPH */
 function showGraph() {
+
     document.getElementById("table").style.display = "none";
     document.getElementById("chartContainer").style.display = "block";
+
     let data = JSON.parse(localStorage.getItem("history") || "[]");
     if (!canvas) canvas = document.getElementById("chart");
 
@@ -265,11 +278,10 @@ function showGraph() {
     let h = canvas.height;
 
     let padL = 70;
-    let padR = 40;
     let padT = 40;
     let padB = 70;
 
-    let usableW = w - padL - padR;
+    let usableW = w - padL - 40;
     let usableH = h - padT - padB;
 
     let stepX = data.length > 1 ? usableW / (data.length - 1) : 0;
@@ -281,11 +293,14 @@ function showGraph() {
 
     for (let i = 0; i <= 10; i++) {
         let y = padT + (usableH / 10) * i;
-        let value = Math.round(100 - i * 10);
+
+        let value = graphMode === "percent"
+            ? Math.round(100 - i * 10)
+            : (10 - i).toFixed(1);
 
         ctx.beginPath();
         ctx.moveTo(padL, y);
-        ctx.lineTo(w - padR, y);
+        ctx.lineTo(w - 40, y);
         ctx.stroke();
 
         ctx.fillText(value, 10, y + 4);
@@ -317,16 +332,14 @@ function showGraph() {
         });
     }
 
-    drawLine("time","red",10);
-    drawLine("avg","green",10);
-    drawLine("percent","blue",100);
+    if (graphMode === "avg") drawLine("avg","green",10);
+    if (graphMode === "percent") drawLine("percent","blue",100);
 
     /* DATE */
     data.forEach((d,i)=>{
         let x = padL + i * stepX + offsetX;
         let y = padT + usableH + 25 + offsetY;
 
-        ctx.fillStyle = "black";
         ctx.fillText(d.date, x-20,y);
     });
 }
