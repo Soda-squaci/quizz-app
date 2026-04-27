@@ -335,14 +335,32 @@ function showGraph() {
     if (graphMode === "avg") drawLine("avg","green",10);
     if (graphMode === "percent") drawLine("percent","blue",100);
 
-    /* DATE */
-    data.forEach((d,i)=>{
-        let x = padL + i * stepX + offsetX;
-        let y = padT + usableH + 25 + offsetY;
+   /* DATE + VALUE */
+data.forEach((d,i)=>{
+    let x = padL + i * stepX + offsetX;
 
-        ctx.fillText(d.date, x-20,y);
-    });
-}
+    let yDate = padT + usableH + 25 + offsetY;
+    let yValue = yDate + 15;
+
+    ctx.font = "12px Arial";
+
+    // ngày
+    ctx.fillStyle = "black";
+    ctx.fillText(d.date, x - 25, yDate);
+
+    // giá trị dưới ngày
+    let text;
+
+    if (graphMode === "percent") {
+        text = d.percent + "%";
+        ctx.fillStyle = "blue";
+    } else {
+        text = d.avg + "s";
+        ctx.fillStyle = "green";
+    }
+
+    ctx.fillText(text, x - 15, yValue);
+});
 
 /* DRAG */
 canvas.addEventListener("mousedown",e=>{
