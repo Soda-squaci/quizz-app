@@ -60,9 +60,10 @@ th {
 #chartContainer {
     width: 90%;
     margin: auto;
-    overflow-x: auto;
+    overflow: hidden;
     background: white;
     border-radius: 10px;
+    cursor: grab;
 }
 
 canvas {
@@ -79,13 +80,11 @@ canvas {
 
 <h2>Luyện toán 🐍</h2>
 
-<!-- MENU -->
 <div id="menu">
     <button onclick="startGame()">Bắt đầu</button>
     <button onclick="showHistory()">Xem lại</button>
 </div>
 
-<!-- GAME -->
 <div id="game" class="hidden">
     <div id="box"></div>
     <input id="answer">
@@ -93,10 +92,8 @@ canvas {
     <button onclick="check()">Trả lời</button>
 </div>
 
-<!-- RESULT -->
 <div id="result"></div>
 
-<!-- HISTORY -->
 <div id="history" class="hidden">
     <h3>Lịch sử 📊</h3>
 
@@ -128,7 +125,12 @@ let correct = 0;
 let a, b;
 let startTime;
 
-/* GAME START */
+/* DRAG STATE */
+let offsetX = 0;
+let isDragging = false;
+let lastX = 0;
+
+/* GAME */
 function startGame() {
     document.getElementById("menu").classList.add("hidden");
     document.getElementById("game").classList.remove("hidden");
@@ -141,12 +143,8 @@ function startGame() {
     nextQuestion();
 }
 
-/* NEXT */
 function nextQuestion() {
-    if (done >= total) {
-        finishGame();
-        return;
-    }
+    if (done >= total) return finishGame();
 
     a = Math.floor(Math.random() * 90) + 10;
     b = Math.floor(Math.random() * 90) + 10;
@@ -161,7 +159,6 @@ function nextQuestion() {
     done++;
 }
 
-/* CHECK */
 function check() {
     let val = Number(document.getElementById("answer").value);
 
@@ -177,12 +174,10 @@ function check() {
     setTimeout(nextQuestion, 300);
 }
 
-/* ENTER */
 document.getElementById("answer").addEventListener("keydown", e => {
     if (e.key === "Enter") check();
 });
 
-/* FINISH */
 function finishGame() {
     let time = (Date.now() - startTime) / 1000;
     let avg = time / total;
@@ -199,7 +194,6 @@ function finishGame() {
     save(time, avg, percent);
 }
 
-/* SAVE */
 function save(time, avg, percent) {
     let data = JSON.parse(localStorage.getItem("history") || "[]");
 
@@ -207,7 +201,7 @@ function save(time, avg, percent) {
         date: new Date().toLocaleDateString(),
         time: Number(time.toFixed(2)),
         avg: Number(avg.toFixed(2)),
-        percent: percent
+        percent
     });
 
     localStorage.setItem("history", JSON.stringify(data));
@@ -220,7 +214,6 @@ function showHistory() {
     switchMode("table");
 }
 
-/* SWITCH MODE */
 function switchMode(mode) {
     if (mode === "table") {
         document.getElementById("table").style.display = "table";
@@ -256,10 +249,6 @@ function showGraph() {
     let canvas = document.getElementById("chart");
     let ctx = canvas.getContext("2d");
 
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    if (data.length === 0) return;
-
     canvas.width = 500 + data.length * 90;
 
     let w = canvas.width;
@@ -275,14 +264,23 @@ function showGraph() {
 
     let stepX = data.length > 1 ? usableW / (data.length - 1) : 0;
 
-    /* GRID */
+    ctx.clearRect(0, 0, w, h);
+
+    /* GRID + Y AXIS */
     ctx.strokeStyle = "#ddd";
+    ctx.fillStyle = "black";
+    ctx.font = "12px Arial";
+
     for (let i = 0; i <= 10; i++) {
         let y = padT + (usableH / 10) * i;
+        let value = Math.round((100 - i * 10));
+
         ctx.beginPath();
         ctx.moveTo(padL, y);
         ctx.lineTo(w - padR, y);
         ctx.stroke();
+
+        ctx.fillText(value, 10, y + 4); // 👈 số cột dọc
     }
 
     function drawLine(key, color, scale) {
@@ -291,7 +289,7 @@ function showGraph() {
         ctx.lineWidth = 2;
 
         data.forEach((d, i) => {
-            let x = padL + i * stepX;
+            let x = padL + i * stepX + offsetX;
             let y = padT + usableH - (d[key] / scale) * usableH;
 
             if (i === 0) ctx.moveTo(x, y);
@@ -301,7 +299,7 @@ function showGraph() {
         ctx.stroke();
 
         data.forEach((d, i) => {
-            let x = padL + i * stepX;
+            let x = padL + i * stepX + offsetX;
             let y = padT + usableH - (d[key] / scale) * usableH;
 
             ctx.fillStyle = color;
@@ -314,17 +312,27 @@ function showGraph() {
     drawLine("time", "red", 10);
     drawLine("avg", "green", 10);
     drawLine("percent", "blue", 100);
-
-    data.forEach((d, i) => {
-        let x = padL + i * stepX;
-
-        ctx.fillStyle = "black";
-        ctx.font = "12px Arial";
-        ctx.fillText(d.date, x - 20, h - 15);
-    });
 }
 
-/* BACK */
+/* 🖱 DRAG */
+const canvas = document.getElementById("chartContainer");
+
+canvas.addEventListener("mousedown", e => {
+    isDragging = true;
+    lastX = e.clientX;
+});
+
+window.addEventListener("mouseup", () => isDragging = false);
+
+window.addEventListener("mousemove", e => {
+    if (!isDragging) return;
+
+    offsetX += (e.clientX - lastX);
+    lastX = e.clientX;
+
+    showGraph();
+});
+
 function backMenu() {
     document.getElementById("history").classList.add("hidden");
     document.getElementById("menu").classList.remove("hidden");
