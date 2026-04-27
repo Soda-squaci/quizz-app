@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Luyện Toán</title>
+<title>Luyện Toán PRO MAX++</title>
 
 <style>
 body {
@@ -42,42 +42,37 @@ input {
     border: none;
 }
 
-table {
-    margin: auto;
-    border-collapse: collapse;
-}
-
-th, td {
-    border: 1px solid black;
-    padding: 10px;
-}
-
-th {
-    background: purple;
-    color: white;
-}
-
 #chartContainer {
     width: 90%;
     margin: auto;
     overflow-x: auto;
     background: white;
     border-radius: 10px;
+    position: relative;
 }
 
 canvas {
     display: block;
 }
 
-.hidden {
+#tooltip {
+    position: absolute;
+    background: black;
+    color: white;
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 14px;
+    pointer-events: none;
     display: none;
 }
+
+.hidden { display: none; }
 </style>
 </head>
 
 <body>
 
-<h2>Luyện toán 🐍</h2>
+<h2>Luyện toán 🚀</h2>
 
 <div id="menu">
     <button onclick="startGame()">Bắt đầu</button>
@@ -96,17 +91,13 @@ canvas {
 <div id="history" class="hidden">
     <h3>Lịch sử 📊</h3>
 
-    <button onclick="showTable()">📋 Bảng</button>
     <button onclick="showGraph()">📈 Đồ thị</button>
-
-    <br>
     <button onclick="setGraphMode('avg')">⏱️ TB</button>
     <button onclick="setGraphMode('percent')">🎯 % đúng</button>
 
-    <table id="table"></table>
-
     <div id="chartContainer">
         <canvas id="chart" height="450"></canvas>
+        <div id="tooltip"></div>
     </div>
 
     <br>
@@ -115,176 +106,135 @@ canvas {
 
 <script>
 
-// ELEMENT
 const menu = document.getElementById("menu");
 const game = document.getElementById("game");
 const historyDiv = document.getElementById("history");
-const table = document.getElementById("table");
-const chartContainer = document.getElementById("chartContainer");
 const box = document.getElementById("box");
 const answer = document.getElementById("answer");
 const result = document.getElementById("result");
 const canvas = document.getElementById("chart");
+const tooltip = document.getElementById("tooltip");
 
-let total = 10;
-let done = 0;
-let correct = 0;
-let a, b;
-let startTime;
+let total = 10, done = 0, correct = 0;
+let a, b, startTime;
 
 let graphMode = "avg";
+let zoom = 1;
 
 /* GAME */
-function startGame() {
+function startGame(){
     menu.classList.add("hidden");
     game.classList.remove("hidden");
-    result.innerHTML = "";
-
-    done = 0;
-    correct = 0;
-    startTime = Date.now();
-
+    result.innerHTML="";
+    done=0; correct=0;
+    startTime=Date.now();
     nextQuestion();
 }
 
-function nextQuestion() {
-    if (done >= total) return finishGame();
-
-    a = Math.floor(Math.random() * 90) + 10;
-    b = Math.floor(Math.random() * 90) + 10;
-
-    box.innerText = a + " + " + b;
-
-    answer.value = "";
-    answer.style.background = "orange";
+function nextQuestion(){
+    if(done>=total) return finishGame();
+    a=Math.floor(Math.random()*90)+10;
+    b=Math.floor(Math.random()*90)+10;
+    box.innerText=a+" + "+b;
+    answer.value="";
     answer.focus();
-
     done++;
 }
 
-function check() {
-    let val = Number(answer.value);
-
-    if (!isNaN(val) && val === a + b) {
+function check(){
+    let val=Number(answer.value);
+    if(val===a+b){
         correct++;
-        answer.value = "✅";
-        answer.style.background = "lightgreen";
-    } else {
-        answer.value = "❎";
-        answer.style.background = "red";
-    }
-
-    setTimeout(nextQuestion, 300);
+        answer.style.background="lightgreen";
+    } else answer.style.background="red";
+    setTimeout(nextQuestion,300);
 }
 
-answer.addEventListener("keydown", e => {
-    if (e.key === "Enter") check();
+answer.addEventListener("keydown",e=>{
+    if(e.key==="Enter") check();
 });
 
 /* FINISH */
-function finishGame() {
-    let time = (Date.now() - startTime) / 1000;
-    let avg = time / total;
-    let percent = Math.round((correct / total) * 100);
+function finishGame(){
+    let time=(Date.now()-startTime)/1000;
+    let avg=time/total;
+    let percent=Math.round((correct/total)*100);
 
     game.classList.add("hidden");
 
-    result.innerHTML =
-        `⏱️ ${time.toFixed(2)}s<br>
-         ⚡ TB: ${avg.toFixed(2)}s<br>
-         🎯 ${percent}%<br><br>
-         <button onclick="backMenu()">🏠 Về menu</button>`;
+    result.innerHTML=
+    `⏱️ ${time.toFixed(2)}s<br>
+     ⚡ ${avg.toFixed(2)}s<br>
+     🎯 ${percent}%<br>
+     <button onclick="backMenu()">Menu</button>`;
 
-    save(time, avg, percent);
+    save(time,avg,percent);
 }
 
-function save(time, avg, percent) {
-    let data = JSON.parse(localStorage.getItem("history") || "[]");
-
+function save(time,avg,percent){
+    let data=JSON.parse(localStorage.getItem("history")||"[]");
     data.push({
-        date: new Date().toLocaleDateString(),
-        time: Number(time.toFixed(2)),
-        avg: Number(avg.toFixed(2)),
+        date:new Date().toLocaleDateString(),
+        avg:Number(avg.toFixed(2)),
         percent
     });
-
-    localStorage.setItem("history", JSON.stringify(data));
+    localStorage.setItem("history",JSON.stringify(data));
 }
 
 /* HISTORY */
-function showHistory() {
+function showHistory(){
     menu.classList.add("hidden");
     historyDiv.classList.remove("hidden");
-    showTable();
+    showGraph();
 }
 
-/* TABLE */
-function showTable() {
-    table.style.display = "table";
-    chartContainer.style.display = "none";
-
-    table.innerHTML =
-        "<tr><th>Ngày</th><th>Thời gian</th><th>TB</th><th>% đúng</th></tr>";
-
-    let data = JSON.parse(localStorage.getItem("history") || "[]");
-
-    data.forEach(d => {
-        let row = table.insertRow();
-        row.insertCell(0).innerText = d.date;
-        row.insertCell(1).innerText = d.time + "s";
-        row.insertCell(2).innerText = d.avg + "s";
-        row.insertCell(3).innerText = d.percent + "%";
-    });
-}
-
-/* MODE */
-function setGraphMode(mode) {
-    graphMode = mode;
+function setGraphMode(m){
+    graphMode=m;
     showGraph();
 }
 
 /* GRAPH */
-function showGraph() {
+function showGraph(){
 
-    table.style.display = "none";
-    chartContainer.style.display = "block";
+    let data=JSON.parse(localStorage.getItem("history")||"[]");
+    let ctx=canvas.getContext("2d");
 
-    let data = JSON.parse(localStorage.getItem("history") || "[]");
-    let ctx = canvas.getContext("2d");
-
-    canvas.width = 800 + data.length * 100;
+    canvas.width = (800 + data.length*100)*zoom;
     canvas.height = 450;
 
     ctx.clearRect(0,0,canvas.width,canvas.height);
 
-    if (data.length === 0) return;
+    if(data.length===0) return;
 
-    let padL = 70;
-    let padT = 40;
-    let padB = 90;
+    let padL=70, padT=40, padB=80;
+    let usableW=canvas.width-padL-40;
+    let usableH=canvas.height-padT-padB;
 
-    let usableW = canvas.width - padL - 40;
-    let usableH = canvas.height - padT - padB;
-
-    let stepX = usableW / (data.length - 1 || 1);
+    let stepX=usableW/(data.length-1||1);
 
     // AUTO SCALE
-    let maxVal = 0;
+    let maxVal=0;
     data.forEach(d=>{
-        let val = graphMode === "percent" ? d.percent : d.avg;
-        if(val > maxVal) maxVal = val;
+        let v=graphMode==="percent"?d.percent:d.avg;
+        if(v>maxVal) maxVal=v;
     });
 
-    let scaleMax = Math.ceil(maxVal * 1.2);
+    let scaleMax=Math.ceil(maxVal*1.2);
 
-    // GRID
+    // STEP đẹp
+    let step = graphMode === "percent" ? 5 : 0.5;
+    let niceMax = Math.ceil(scaleMax / step) * step;
+    let lines = niceMax / step;
+
+    /* GRID */
     ctx.strokeStyle = "#ddd";
     ctx.fillStyle = "black";
     ctx.font = "12px Arial";
 
-    for (let i = 0; i <= 10; i++) {
-        let y = padT + (usableH / 10) * i;
-        let value = Math.round(scaleMax - i * scaleMax / 10);
+    for (let i = 0; i <= lines; i++) {
+
+        let value = i * step;
+        let y = padT + usableH - (value / niceMax) * usableH;
 
         ctx.beginPath();
         ctx.moveTo(padL, y);
@@ -294,48 +244,85 @@ function showGraph() {
         ctx.fillText(value, 10, y + 4);
     }
 
-    // LINE
-    ctx.beginPath();
-    ctx.strokeStyle = graphMode === "percent" ? "blue" : "green";
-    ctx.lineWidth = 2;
+    let points=[];
 
     data.forEach((d,i)=>{
-        let val = graphMode === "percent" ? d.percent : d.avg;
+        let val=graphMode==="percent"?d.percent:d.avg;
 
-        let x = padL + i * stepX;
-        let y = padT + usableH - (val/scaleMax)*usableH;
+        let x=padL+i*stepX;
+        let y=padT+usableH-(val/niceMax)*usableH;
 
-        if(i===0) ctx.moveTo(x,y);
-        else ctx.lineTo(x,y);
+        points.push({x,y,val,date:d.date});
+    });
+
+    // LINE
+    ctx.beginPath();
+    ctx.strokeStyle = graphMode==="percent"?"blue":"green";
+    ctx.lineWidth=2;
+
+    points.forEach((p,i)=>{
+        if(i===0) ctx.moveTo(p.x,p.y);
+        else ctx.lineTo(p.x,p.y);
     });
 
     ctx.stroke();
 
-    // POINT + LABEL
-    data.forEach((d,i)=>{
-        let val = graphMode === "percent" ? d.percent : d.avg;
-
-        let x = padL + i * stepX;
-        let y = padT + usableH - (val/scaleMax)*usableH;
-
-        ctx.fillStyle = graphMode === "percent" ? "blue" : "green";
+    // POINT + TEXT
+    points.forEach(p=>{
+        ctx.fillStyle = graphMode==="percent"?"blue":"green";
 
         ctx.beginPath();
-        ctx.arc(x,y,5,0,Math.PI*2);
+        ctx.arc(p.x,p.y,5,0,Math.PI*2);
         ctx.fill();
 
-        // VALUE trên điểm
         ctx.fillText(
-            graphMode === "percent" ? val+"%" : val+"s",
-            x-15,
-            y-10
+            graphMode==="percent"?p.val+"%":p.val+"s",
+            p.x-15,
+            p.y-10
         );
 
-        // DATE dưới
-        ctx.fillStyle = "black";
-        ctx.fillText(d.date, x-30, padT + usableH + 20);
+        ctx.fillStyle="black";
+        ctx.fillText(p.date,p.x-30,padT+usableH+20);
     });
+
+    // TOOLTIP
+    canvas.onmousemove = (e)=>{
+        let rect=canvas.getBoundingClientRect();
+        let mx=e.clientX-rect.left;
+        let my=e.clientY-rect.top;
+
+        let found=null;
+
+        points.forEach(p=>{
+            if(Math.abs(mx-p.x)<10 && Math.abs(my-p.y)<10){
+                found=p;
+            }
+        });
+
+        if(found){
+            tooltip.style.display="block";
+            tooltip.style.left=(found.x+10)+"px";
+            tooltip.style.top=(found.y-10)+"px";
+
+            tooltip.innerHTML =
+                found.date + "<br>" +
+                (graphMode==="percent"
+                    ? found.val+"%"
+                    : found.val+"s");
+        } else {
+            tooltip.style.display="none";
+        }
+    };
 }
+
+/* ZOOM */
+canvas.addEventListener("wheel", e=>{
+    e.preventDefault();
+    zoom += e.deltaY < 0 ? 0.1 : -0.1;
+    if(zoom<0.5) zoom=0.5;
+    if(zoom>3) zoom=3;
+    showGraph();
+});
 
 /* BACK */
 function backMenu(){
