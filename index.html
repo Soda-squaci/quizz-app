@@ -268,34 +268,95 @@ function showGraph() {
 
     if (data.length === 0) return;
 
-    /* 🔥 WIDTH THEO DATA */
+    /* 📏 rộng theo data */
     canvas.width = 500 + data.length * 90;
 
     let w = canvas.width;
     let h = canvas.height;
 
-    let padL = 60;
+    let padL = 70;
     let padR = 40;
     let padT = 40;
-    let padB = 70;
+    let padB = 80;
 
     let usableW = w - padL - padR;
     let usableH = h - padT - padB;
 
     let stepX = data.length > 1 ? usableW / (data.length - 1) : 0;
 
-    /* GRID */
+    /* ================= GRID ================= */
     ctx.strokeStyle = "#ddd";
+    ctx.lineWidth = 1;
 
     for (let i = 0; i <= 10; i++) {
         let y = padT + (usableH / 10) * i;
         ctx.beginPath();
-        ctx.moveTo(0, y);
-        ctx.lineTo(w, y);
+        ctx.moveTo(padL, y);
+        ctx.lineTo(w - padR, y);
         ctx.stroke();
     }
 
-    /* LINE */
+    /* ================= TIME (ĐỎ) ================= */
+    ctx.beginPath();
+    ctx.strokeStyle = "red";
+    ctx.lineWidth = 2;
+
+    data.forEach((d, i) => {
+        let x = padL + i * stepX;
+        let y = padT + usableH - (d.time / 10) * usableH;
+
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+    });
+
+    ctx.stroke();
+
+    /* chấm + số time */
+    data.forEach((d, i) => {
+        let x = padL + i * stepX;
+        let y = padT + usableH - (d.time / 10) * usableH;
+
+        ctx.fillStyle = "red";
+        ctx.beginPath();
+        ctx.arc(x, y, 6, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = "red";
+        ctx.font = "12px Arial";
+        ctx.fillText(d.time + "s", x - 15, y - 10);
+    });
+
+    /* ================= AVG (XANH LÁ) ================= */
+    ctx.beginPath();
+    ctx.strokeStyle = "green";
+    ctx.lineWidth = 2;
+
+    data.forEach((d, i) => {
+        let x = padL + i * stepX;
+        let y = padT + usableH - (d.avg / 10) * usableH;
+
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+    });
+
+    ctx.stroke();
+
+    /* chấm + số avg */
+    data.forEach((d, i) => {
+        let x = padL + i * stepX;
+        let y = padT + usableH - (d.avg / 10) * usableH;
+
+        ctx.fillStyle = "green";
+        ctx.beginPath();
+        ctx.arc(x, y, 6, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = "green";
+        ctx.font = "12px Arial";
+        ctx.fillText(d.avg + "s", x - 15, y - 10);
+    });
+
+    /* ================= % (XANH DƯƠNG) ================= */
     ctx.beginPath();
     ctx.strokeStyle = "blue";
     ctx.lineWidth = 3;
@@ -310,19 +371,28 @@ function showGraph() {
 
     ctx.stroke();
 
-    /* POINTS + DATE */
+    /* chấm + số % */
     data.forEach((d, i) => {
         let x = padL + i * stepX;
         let y = padT + usableH - (d.percent / 100) * usableH;
 
+        ctx.fillStyle = "blue";
         ctx.beginPath();
         ctx.arc(x, y, 6, 0, Math.PI * 2);
-        ctx.fillStyle = "red";
         ctx.fill();
+
+        ctx.fillStyle = "blue";
+        ctx.font = "12px Arial";
+        ctx.fillText(d.percent + "%", x - 15, y - 10);
+    });
+
+    /* ================= DATE ================= */
+    data.forEach((d, i) => {
+        let x = padL + i * stepX;
 
         ctx.fillStyle = "black";
         ctx.font = "12px Arial";
-        ctx.fillText(d.date, x - 20, h - 15);
+        ctx.fillText(d.date, x - 25, h - 15);
     });
 }
 
