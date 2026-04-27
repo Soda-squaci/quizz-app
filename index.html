@@ -337,6 +337,51 @@ function showGraph() {
         });
     }
 }
+
+    /* helper vẽ 1 line */
+    function drawLine(key, color) {
+        ctx.beginPath();
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 2;
+
+        data.forEach((d, i) => {
+            let x = padL + i * stepX;
+            let y = padT + usableH - (d[key] / (key === "percent" ? 100 : 10)) * usableH;
+
+            if (i === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+        });
+
+        ctx.stroke();
+
+        /* points */
+        data.forEach((d, i) => {
+            let x = padL + i * stepX;
+            let y = padT + usableH - (d[key] / (key === "percent" ? 100 : 10)) * usableH;
+
+            ctx.fillStyle = color;
+            ctx.beginPath();
+            ctx.arc(x, y, 5, 0, Math.PI * 2);
+            ctx.fill();
+        });
+    }
+
+    /* 3 đường */
+    drawLine("time", "red");
+    drawLine("avg", "green");
+    drawLine("percent", "blue");
+
+    /* CHỈ HIỆN SỐ KHI ÍT DỮ LIỆU (tránh rối) */
+    if (data.length <= 6) {
+        data.forEach((d, i) => {
+            let x = padL + i * stepX;
+
+            ctx.fillStyle = "black";
+            ctx.font = "12px Arial";
+            ctx.fillText(d.date, x - 20, h - 15);
+        });
+    }
+}
 /* MENU */
 function backMenu() {
     document.getElementById("history").classList.add("hidden");
