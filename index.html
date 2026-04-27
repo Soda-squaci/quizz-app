@@ -93,7 +93,7 @@ canvas {
 <div id="history" class="hidden">
     <h3>Lịch sử 📊</h3>
 
-    <!-- MODE BUTTON -->
+    <!-- 2 NÚT MODE -->
     <button onclick="showTable()">📋 Bảng</button>
     <button onclick="showGraph()">📈 Đồ thị</button>
 
@@ -177,6 +177,7 @@ function finishGame() {
     save(time, avg, percent);
 }
 
+/* SAVE */
 function save(time, avg, percent) {
     let data = JSON.parse(localStorage.getItem("history") || "[]");
 
@@ -218,13 +219,12 @@ function showTable() {
     });
 }
 
-/* 📈 GRAPH */
+/* 📈 GRAPH (line + nối điểm) */
 function showGraph() {
     document.getElementById("table").style.display = "none";
     document.getElementById("chart").style.display = "block";
 
     let data = JSON.parse(localStorage.getItem("history") || "[]");
-
     let canvas = document.getElementById("chart");
     let ctx = canvas.getContext("2d");
 
@@ -232,23 +232,33 @@ function showGraph() {
 
     if (data.length === 0) return;
 
-    let max = 100;
     let stepX = canvas.width / (data.length + 1);
+    let maxY = 100;
 
     ctx.beginPath();
-    ctx.moveTo(0, canvas.height);
 
     data.forEach((d, i) => {
         let x = (i + 1) * stepX;
-        let y = canvas.height - (d.percent / max) * canvas.height;
+        let y = canvas.height - (d.percent / maxY) * canvas.height;
 
-        ctx.lineTo(x, y);
-
-        ctx.fillText(d.percent + "%", x - 10, y - 10);
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
     });
 
     ctx.strokeStyle = "blue";
+    ctx.lineWidth = 3;
     ctx.stroke();
+
+    // điểm tròn
+    data.forEach((d, i) => {
+        let x = (i + 1) * stepX;
+        let y = canvas.height - (d.percent / maxY) * canvas.height;
+
+        ctx.beginPath();
+        ctx.arc(x, y, 5, 0, Math.PI * 2);
+        ctx.fillStyle = "red";
+        ctx.fill();
+    });
 }
 
 /* MENU */
