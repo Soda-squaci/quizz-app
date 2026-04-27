@@ -246,6 +246,8 @@ function showTable() {
 
 /* GRAPH */
 function showGraph() {
+    document.getElementById("table").style.display = "none";
+    document.getElementById("chartContainer").style.display = "block";
     let data = JSON.parse(localStorage.getItem("history") || "[]");
     if (!canvas) canvas = document.getElementById("chart");
 
