@@ -19,11 +19,13 @@ button {
     cursor: pointer;
 }
 
+/* MENU TO */
 #menu button {
     font-size: 34px;
     padding: 20px 35px;
 }
 
+/* BOX */
 #box {
     background: white;
     font-size: 42px;
@@ -33,14 +35,18 @@ button {
     border-radius: 12px;
 }
 
+/* INPUT CAM */
 input {
     font-size: 30px;
     padding: 10px;
     width: 200px;
     text-align: center;
     border-radius: 8px;
+    background: orange;
+    border: none;
 }
 
+/* TABLE */
 table {
     margin: auto;
     border-collapse: collapse;
@@ -60,6 +66,7 @@ th {
     display: none;
 }
 
+/* CANVAS */
 canvas {
     background: white;
     margin-top: 20px;
@@ -93,11 +100,9 @@ canvas {
 <div id="history" class="hidden">
     <h3>Lịch sử 📊</h3>
 
-    <!-- 2 NÚT MODE -->
     <button onclick="showTable()">📋 Bảng</button>
     <button onclick="showGraph()">📈 Đồ thị</button>
 
-    <!-- TABLE -->
     <table id="table">
         <tr>
             <th>Ngày</th>
@@ -107,8 +112,7 @@ canvas {
         </tr>
     </table>
 
-    <!-- GRAPH -->
-    <canvas id="chart" width="400" height="250"></canvas>
+    <canvas id="chart" width="600" height="350"></canvas>
 
     <br>
     <button onclick="backMenu()">Quay lại</button>
@@ -152,15 +156,36 @@ function nextQuestion() {
     done++;
 }
 
+/* ✔ CHECK + HIỆN ✅ ❎ */
 function check() {
-    let val = Number(document.getElementById("answer").value);
+    let input = document.getElementById("answer");
+    let val = Number(input.value);
+
     if (isNaN(val)) return;
 
-    if (val === a + b) correct++;
+    if (val === a + b) {
+        correct++;
+        input.value = "✅";
+        input.style.background = "lightgreen";
+    } else {
+        input.value = "❎";
+        input.style.background = "red";
+    }
 
-    setTimeout(nextQuestion, 300);
+    setTimeout(() => {
+        input.style.background = "orange";
+        nextQuestion();
+    }, 500);
 }
 
+/* ENTER */
+document.getElementById("answer").addEventListener("keydown", function(e) {
+    if (e.key === "Enter") {
+        check();
+    }
+});
+
+/* FINISH */
 function finishGame() {
     let time = (Date.now() - startTime) / 1000;
     let avg = time / total;
@@ -199,7 +224,7 @@ function showHistory() {
     showTable();
 }
 
-/* 📋 TABLE */
+/* TABLE */
 function showTable() {
     document.getElementById("table").style.display = "table";
     document.getElementById("chart").style.display = "none";
@@ -219,7 +244,7 @@ function showTable() {
     });
 }
 
-/* 📈 GRAPH (line + nối điểm) */
+/* GRAPH */
 function showGraph() {
     document.getElementById("table").style.display = "none";
     document.getElementById("chart").style.display = "block";
@@ -232,32 +257,49 @@ function showGraph() {
 
     if (data.length === 0) return;
 
-    let stepX = canvas.width / (data.length + 1);
-    let maxY = 100;
+    let w = canvas.width;
+    let h = canvas.height;
+    let stepX = w / (data.length + 1);
 
+    /* GRID */
+    ctx.strokeStyle = "#ddd";
+    for (let i = 0; i <= 10; i++) {
+        let y = (h / 10) * i;
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(w, y);
+        ctx.stroke();
+    }
+
+    /* LINE */
     ctx.beginPath();
+    ctx.strokeStyle = "blue";
+    ctx.lineWidth = 3;
 
     data.forEach((d, i) => {
         let x = (i + 1) * stepX;
-        let y = canvas.height - (d.percent / maxY) * canvas.height;
+        let y = h - (d.percent / 100) * h;
 
         if (i === 0) ctx.moveTo(x, y);
         else ctx.lineTo(x, y);
     });
 
-    ctx.strokeStyle = "blue";
-    ctx.lineWidth = 3;
     ctx.stroke();
 
-    // điểm tròn
+    /* POINTS */
     data.forEach((d, i) => {
         let x = (i + 1) * stepX;
-        let y = canvas.height - (d.percent / maxY) * canvas.height;
+        let y = h - (d.percent / 100) * h;
 
         ctx.beginPath();
         ctx.arc(x, y, 5, 0, Math.PI * 2);
         ctx.fillStyle = "red";
         ctx.fill();
+
+        /* DATE */
+        ctx.fillStyle = "black";
+        ctx.font = "12px Arial";
+        ctx.fillText(d.date, x - 20, h - 5);
     });
 }
 
