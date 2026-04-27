@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Luyện Toán</title>
+<title>Luyện Toán PRO</title>
 
 <style>
 body {
@@ -78,7 +78,7 @@ canvas {
 
 <body>
 
-<h2>Luyện toán 🐍</h2>
+<h2>Luyện toán 🚀</h2>
 
 <div id="menu">
     <button onclick="startGame()">Bắt đầu</button>
@@ -123,6 +123,7 @@ const chartContainer = document.getElementById("chartContainer");
 const box = document.getElementById("box");
 const answer = document.getElementById("answer");
 const result = document.getElementById("result");
+const canvas = document.getElementById("chart");
 
 let total = 10;
 let done = 0;
@@ -131,17 +132,14 @@ let a, b;
 let startTime;
 
 let offsetX = 0;
-let offsetY = 0;
 let isDragging = false;
 let lastX = 0;
-let lastY = 0;
 
-let canvas;
+let scale = 1;
+let mouseX = 0;
+let mouseY = 0;
+
 let graphMode = "avg";
-
-window.addEventListener("load", () => {
-    canvas = document.getElementById("chart");
-});
 
 /* GAME */
 function startGame() {
@@ -227,7 +225,6 @@ function showHistory() {
     showTable();
 }
 
-/* TABLE */
 function showTable() {
     table.style.display = "table";
     chartContainer.style.display = "none";
@@ -246,7 +243,6 @@ function showTable() {
     });
 }
 
-/* MODE */
 function setGraphMode(mode) {
     graphMode = mode;
     showGraph();
@@ -254,7 +250,6 @@ function setGraphMode(mode) {
 
 /* GRAPH */
 function showGraph() {
-
     table.style.display = "none";
     chartContainer.style.display = "block";
 
@@ -278,9 +273,15 @@ function showGraph() {
 
     let stepX = data.length > 1 ? usableW / (data.length - 1) : 0;
 
-    // 🔥 FIX QUAN TRỌNG
+    let maxValue = graphMode === "percent"
+        ? 100
+        : Math.max(...data.map(d => d.avg));
+
+    if (maxValue === 0) maxValue = 1;
+
     ctx.save();
-    ctx.translate(offsetX, offsetY);
+    ctx.translate(offsetX, 0);
+    ctx.scale(scale, scale);
 
     /* GRID */
     ctx.strokeStyle = "#ddd";
@@ -289,10 +290,9 @@ function showGraph() {
 
     for (let i = 0; i <= 10; i++) {
         let y = padT + (usableH / 10) * i;
-
         let value = graphMode === "percent"
             ? 100 - i * 10
-            : (10 - i).toFixed(1);
+            : (maxValue - (maxValue/10)*i).toFixed(1);
 
         ctx.beginPath();
         ctx.moveTo(padL, y);
@@ -302,14 +302,13 @@ function showGraph() {
         ctx.fillText(value, 10, y + 4);
     }
 
-    function drawLine(key, color, scale) {
+    function drawLine() {
         ctx.beginPath();
-        ctx.strokeStyle = color;
-        ctx.lineWidth = 2;
+        ctx.strokeStyle = graphMode === "avg" ? "green" : "blue";
 
         data.forEach((d,i)=>{
             let x = padL + i * stepX;
-            let y = padT + usableH - (d[key]/scale)*usableH;
+            let y = padT + usableH - (d[graphMode]/maxValue)*usableH;
 
             if(i===0) ctx.moveTo(x,y);
             else ctx.lineTo(x,y);
@@ -319,62 +318,74 @@ function showGraph() {
 
         data.forEach((d,i)=>{
             let x = padL + i * stepX;
-            let y = padT + usableH - (d[key]/scale)*usableH;
+            let y = padT + usableH - (d[graphMode]/maxValue)*usableH;
 
-            ctx.fillStyle = color;
             ctx.beginPath();
             ctx.arc(x,y,5,0,Math.PI*2);
             ctx.fill();
         });
     }
 
-    if (graphMode === "avg") drawLine("avg","green",10);
-    if (graphMode === "percent") drawLine("percent","blue",100);
+    drawLine();
 
-    /* DATE + VALUE */
+    /* TOOLTIP */
     data.forEach((d,i)=>{
         let x = padL + i * stepX;
+        let y = padT + usableH - (d[graphMode]/maxValue)*usableH;
 
-        let yDate = padT + usableH + 25;
-        let yValue = yDate + 15;
+        let dx = mouseX/scale - offsetX - x;
+        let dy = mouseY/scale - y;
 
-        ctx.fillStyle = "black";
-        ctx.fillText(d.date, x - 25, yDate);
+        if (Math.abs(dx) < 10 && Math.abs(dy) < 10) {
+            ctx.fillStyle = "black";
+            ctx.fillRect(x + 10, y - 30, 120, 30);
 
-        let text;
-        if (graphMode === "percent") {
-            text = d.percent + "%";
-            ctx.fillStyle = "blue";
-        } else {
-            text = d.avg + "s";
-            ctx.fillStyle = "green";
+            ctx.fillStyle = "white";
+            let text = graphMode === "percent"
+                ? d.percent + "%"
+                : d.avg + "s";
+
+            ctx.fillText(d.date + " | " + text, x + 15, y - 10);
         }
-
-        ctx.fillText(text, x - 15, yValue);
     });
 
     ctx.restore();
 }
 
 /* DRAG */
-canvas.addEventListener("mousedown",e=>{
-    isDragging=true;
-    lastX=e.clientX;
-    lastY=e.clientY;
+canvas.addEventListener("mousedown", e=>{
+    isDragging = true;
+    lastX = e.clientX;
 });
 
-window.addEventListener("mouseup",()=>isDragging=false);
+window.addEventListener("mouseup", ()=> isDragging=false);
 
-window.addEventListener("mousemove",e=>{
+window.addEventListener("mousemove", e=>{
     if(!isDragging) return;
 
-    offsetX+=e.clientX-lastX;
-    offsetY+=e.clientY-lastY;
-
-    lastX=e.clientX;
-    lastY=e.clientY;
+    offsetX += e.clientX - lastX;
+    lastX = e.clientX;
 
     showGraph();
+});
+
+/* ZOOM */
+canvas.addEventListener("wheel", e=>{
+    e.preventDefault();
+
+    if (e.deltaY < 0) scale *= 1.1;
+    else scale /= 1.1;
+
+    scale = Math.max(0.5, Math.min(3, scale));
+
+    showGraph();
+});
+
+/* MOUSE TRACK */
+canvas.addEventListener("mousemove", e=>{
+    const rect = canvas.getBoundingClientRect();
+    mouseX = e.clientX - rect.left;
+    mouseY = e.clientY - rect.top;
 });
 
 /* BACK */
