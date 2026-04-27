@@ -57,7 +57,6 @@ th {
     color: white;
 }
 
-/* GRAPH SCROLL */
 #chartContainer {
     width: 90%;
     margin: auto;
@@ -101,8 +100,8 @@ canvas {
 <div id="history" class="hidden">
     <h3>Lịch sử 📊</h3>
 
-    <button onclick="showTable()">📋 Bảng</button>
-    <button onclick="showGraph()">📈 Đồ thị</button>
+    <button onclick="switchMode('table')">📋 Bảng</button>
+    <button onclick="switchMode('graph')">📈 Đồ thị</button>
 
     <table id="table">
         <tr>
@@ -129,7 +128,7 @@ let correct = 0;
 let a, b;
 let startTime;
 
-/* START */
+/* GAME START */
 function startGame() {
     document.getElementById("menu").classList.add("hidden");
     document.getElementById("game").classList.remove("hidden");
@@ -218,14 +217,24 @@ function save(time, avg, percent) {
 function showHistory() {
     document.getElementById("menu").classList.add("hidden");
     document.getElementById("history").classList.remove("hidden");
-    showTable();
+    switchMode("table");
+}
+
+/* SWITCH MODE */
+function switchMode(mode) {
+    if (mode === "table") {
+        document.getElementById("table").style.display = "table";
+        document.getElementById("chartContainer").style.display = "none";
+        showTable();
+    } else {
+        document.getElementById("table").style.display = "none";
+        document.getElementById("chartContainer").style.display = "block";
+        showGraph();
+    }
 }
 
 /* TABLE */
 function showTable() {
-    document.getElementById("table").style.display = "table";
-    document.getElementById("chartContainer").style.display = "none";
-
     let table = document.getElementById("table");
     table.innerHTML =
         "<tr><th>Ngày</th><th>Thời gian</th><th>TB</th><th>% đúng</th></tr>";
@@ -243,9 +252,6 @@ function showTable() {
 
 /* GRAPH */
 function showGraph() {
-    document.getElementById("table").style.display = "none";
-    document.getElementById("chartContainer").style.display = "block";
-
     let data = JSON.parse(localStorage.getItem("history") || "[]");
     let canvas = document.getElementById("chart");
     let ctx = canvas.getContext("2d");
