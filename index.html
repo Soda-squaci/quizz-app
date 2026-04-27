@@ -261,21 +261,20 @@ function showGraph() {
     let w = canvas.width;
     let h = canvas.height;
 
-    /* 🔥 TĂNG KHOẢNG CÁCH */
-    let paddingLeft = 40;
-    let paddingRight = 20;
-    let paddingTop = 30;
-    let paddingBottom = 60;
+    /* 🔥 GIÃN THẬT MẠNH */
+    let paddingLeft = 60;
+    let paddingRight = 40;
+    let paddingTop = 40;
+    let paddingBottom = 80;
 
     let usableW = w - paddingLeft - paddingRight;
     let usableH = h - paddingTop - paddingBottom;
 
-    let stepX = usableW / (data.length - 1);
+    /* 👉 GIÃN KHOẢNG CÁCH GẤP ĐÔI */
+    let stepX = data.length > 1 ? usableW / (data.length - 1) : 0;
 
-    if (data.length === 1) stepX = 0;
-
-    /* 📊 GRID (rộng + rõ hơn) */
-    ctx.strokeStyle = "#ddd";
+    /* 📊 GRID THOÁNG */
+    ctx.strokeStyle = "#e0e0e0";
     ctx.lineWidth = 1;
 
     for (let i = 0; i <= 10; i++) {
@@ -308,14 +307,19 @@ function showGraph() {
         let y = paddingTop + usableH - (d.percent / 100) * usableH;
 
         ctx.beginPath();
-        ctx.arc(x, y, 6, 0, Math.PI * 2);
+        ctx.arc(x, y, 7, 0, Math.PI * 2);
         ctx.fillStyle = "red";
         ctx.fill();
 
-        /* 📅 NGÀY (KHÔNG DÍNH MÉP) */
+        /* 📅 NGÀY GIÃN RA, KHÔNG DÍNH */
         ctx.fillStyle = "black";
-        ctx.font = "12px Arial";
-        ctx.fillText(d.date, x - 25, h - 20);
+        ctx.font = "13px Arial";
+
+        ctx.save();
+        ctx.translate(x, h - 25);
+        ctx.rotate(-0.3); // hơi nghiêng cho đỡ đè nhau
+        ctx.fillText(d.date, -20, 0);
+        ctx.restore();
     });
 }
 
