@@ -11,7 +11,6 @@ body {
     font-family: Arial;
 }
 
-/* BUTTON */
 button {
     font-size: 22px;
     margin: 10px;
@@ -19,13 +18,11 @@ button {
     border-radius: 10px;
 }
 
-/* MENU */
 #menu button {
     font-size: 34px;
     padding: 20px 35px;
 }
 
-/* BOX */
 #box {
     background: white;
     font-size: 42px;
@@ -35,7 +32,6 @@ button {
     border-radius: 12px;
 }
 
-/* INPUT CAM */
 input {
     font-size: 30px;
     padding: 10px;
@@ -46,7 +42,6 @@ input {
     border: none;
 }
 
-/* TABLE */
 table {
     margin: auto;
     border-collapse: collapse;
@@ -88,7 +83,7 @@ canvas {
 <!-- MENU -->
 <div id="menu">
     <button onclick="startGame()">Bắt đầu</button>
-    <button onclick="showHistory()">Xem lại kết quả</button>
+    <button onclick="showHistory()">Xem lại</button>
 </div>
 
 <!-- GAME -->
@@ -169,25 +164,22 @@ function nextQuestion() {
 
 /* CHECK */
 function check() {
-    let input = document.getElementById("answer");
-    let val = Number(input.value);
+    let val = Number(document.getElementById("answer").value);
 
-    if (isNaN(val)) return;
-
-    if (val === a + b) {
+    if (!isNaN(val) && val === a + b) {
         correct++;
-        input.value = "✅";
-        input.style.background = "lightgreen";
+        document.getElementById("answer").value = "✅";
+        document.getElementById("answer").style.background = "lightgreen";
     } else {
-        input.value = "❎";
-        input.style.background = "red";
+        document.getElementById("answer").value = "❎";
+        document.getElementById("answer").style.background = "red";
     }
 
     setTimeout(nextQuestion, 300);
 }
 
 /* ENTER */
-document.getElementById("answer").addEventListener("keydown", function(e) {
+document.getElementById("answer").addEventListener("keydown", e => {
     if (e.key === "Enter") check();
 });
 
