@@ -101,18 +101,10 @@ canvas {
     <button onclick="showGraph()">📈 Đồ thị</button>
 
     <br>
-    <!-- MODE -->
     <button onclick="setGraphMode('avg')">⏱️ TB</button>
     <button onclick="setGraphMode('percent')">🎯 % đúng</button>
 
-    <table id="table">
-        <tr>
-            <th>Ngày</th>
-            <th>Thời gian</th>
-            <th>TB</th>
-            <th>% đúng</th>
-        </tr>
-    </table>
+    <table id="table"></table>
 
     <div id="chartContainer">
         <canvas id="chart" height="450"></canvas>
@@ -146,9 +138,9 @@ window.addEventListener("load", () => {
 
 /* GAME */
 function startGame() {
-    document.getElementById("menu").classList.add("hidden");
-    document.getElementById("game").classList.remove("hidden");
-    document.getElementById("result").innerHTML = "";
+    menu.classList.add("hidden");
+    game.classList.remove("hidden");
+    result.innerHTML = "";
 
     done = 0;
     correct = 0;
@@ -163,32 +155,31 @@ function nextQuestion() {
     a = Math.floor(Math.random() * 90) + 10;
     b = Math.floor(Math.random() * 90) + 10;
 
-    document.getElementById("box").innerText = a + " + " + b;
+    box.innerText = a + " + " + b;
 
-    let input = document.getElementById("answer");
-    input.value = "";
-    input.style.background = "orange";
-    input.focus();
+    answer.value = "";
+    answer.style.background = "orange";
+    answer.focus();
 
     done++;
 }
 
 function check() {
-    let val = Number(document.getElementById("answer").value);
+    let val = Number(answer.value);
 
     if (!isNaN(val) && val === a + b) {
         correct++;
-        document.getElementById("answer").value = "✅";
-        document.getElementById("answer").style.background = "lightgreen";
+        answer.value = "✅";
+        answer.style.background = "lightgreen";
     } else {
-        document.getElementById("answer").value = "❎";
-        document.getElementById("answer").style.background = "red";
+        answer.value = "❎";
+        answer.style.background = "red";
     }
 
     setTimeout(nextQuestion, 300);
 }
 
-document.getElementById("answer").addEventListener("keydown", e => {
+answer.addEventListener("keydown", e => {
     if (e.key === "Enter") check();
 });
 
@@ -198,13 +189,13 @@ function finishGame() {
     let avg = time / total;
     let percent = Math.round((correct / total) * 100);
 
-    document.getElementById("game").classList.add("hidden");
+    game.classList.add("hidden");
 
-    document.getElementById("result").innerHTML =
-        "⏱️ " + time.toFixed(2) + "s<br>" +
-        "⚡ TB: " + avg.toFixed(2) + "s<br>" +
-        "🎯 " + percent + "%<br><br>" +
-        "<button onclick='backMenu()'>🏠 Về menu</button>";
+    result.innerHTML =
+        `⏱️ ${time.toFixed(2)}s<br>
+         ⚡ TB: ${avg.toFixed(2)}s<br>
+         🎯 ${percent}%<br><br>
+         <button onclick="backMenu()">🏠 Về menu</button>`;
 
     save(time, avg, percent);
 }
@@ -224,17 +215,16 @@ function save(time, avg, percent) {
 
 /* HISTORY */
 function showHistory() {
-    document.getElementById("menu").classList.add("hidden");
-    document.getElementById("history").classList.remove("hidden");
+    menu.classList.add("hidden");
+    history.classList.remove("hidden");
     showTable();
 }
 
 /* TABLE */
 function showTable() {
-    document.getElementById("table").style.display = "table";
-    document.getElementById("chartContainer").style.display = "none";
+    table.style.display = "table";
+    chartContainer.style.display = "none";
 
-    let table = document.getElementById("table");
     table.innerHTML =
         "<tr><th>Ngày</th><th>Thời gian</th><th>TB</th><th>% đúng</th></tr>";
 
@@ -258,11 +248,10 @@ function setGraphMode(mode) {
 /* GRAPH */
 function showGraph() {
 
-    document.getElementById("table").style.display = "none";
-    document.getElementById("chartContainer").style.display = "block";
+    table.style.display = "none";
+    chartContainer.style.display = "block";
 
     let data = JSON.parse(localStorage.getItem("history") || "[]");
-    if (!canvas) canvas = document.getElementById("chart");
 
     let ctx = canvas.getContext("2d");
 
@@ -274,15 +263,12 @@ function showGraph() {
 
     if (data.length === 0) return;
 
-    let w = canvas.width;
-    let h = canvas.height;
-
     let padL = 70;
     let padT = 40;
     let padB = 70;
 
-    let usableW = w - padL - 40;
-    let usableH = h - padT - padB;
+    let usableW = canvas.width - padL - 40;
+    let usableH = canvas.height - padT - padB;
 
     let stepX = data.length > 1 ? usableW / (data.length - 1) : 0;
 
@@ -295,12 +281,12 @@ function showGraph() {
         let y = padT + (usableH / 10) * i;
 
         let value = graphMode === "percent"
-            ? Math.round(100 - i * 10)
+            ? 100 - i * 10
             : (10 - i).toFixed(1);
 
         ctx.beginPath();
         ctx.moveTo(padL, y);
-        ctx.lineTo(w - 40, y);
+        ctx.lineTo(canvas.width - 40, y);
         ctx.stroke();
 
         ctx.fillText(value, 10, y + 4);
@@ -335,33 +321,28 @@ function showGraph() {
     if (graphMode === "avg") drawLine("avg","green",10);
     if (graphMode === "percent") drawLine("percent","blue",100);
 
-   /* DATE + VALUE */
-data.forEach((d,i)=>{
-    let x = padL + i * stepX + offsetX;
+    /* DATE + VALUE */
+    data.forEach((d,i)=>{
+        let x = padL + i * stepX + offsetX;
 
-    let yDate = padT + usableH + 25 + offsetY;
-    let yValue = yDate + 15;
+        let yDate = padT + usableH + 25 + offsetY;
+        let yValue = yDate + 15;
 
-    ctx.font = "12px Arial";
+        ctx.fillStyle = "black";
+        ctx.fillText(d.date, x - 25, yDate);
 
-    // ngày
-    ctx.fillStyle = "black";
-    ctx.fillText(d.date, x - 25, yDate);
-} //
+        let text;
+        if (graphMode === "percent") {
+            text = d.percent + "%";
+            ctx.fillStyle = "blue";
+        } else {
+            text = d.avg + "s";
+            ctx.fillStyle = "green";
+        }
 
-    // giá trị dưới ngày
-    let text;
-
-    if (graphMode === "percent") {
-        text = d.percent + "%";
-        ctx.fillStyle = "blue";
-    } else {
-        text = d.avg + "s";
-        ctx.fillStyle = "green";
-    }
-
-    ctx.fillText(text, x - 15, yValue);
-});
+        ctx.fillText(text, x - 15, yValue);
+    });
+}
 
 /* DRAG */
 canvas.addEventListener("mousedown",e=>{
@@ -384,9 +365,10 @@ window.addEventListener("mousemove",e=>{
     showGraph();
 });
 
+/* BACK */
 function backMenu(){
-    document.getElementById("history").classList.add("hidden");
-    document.getElementById("menu").classList.remove("hidden");
+    history.classList.add("hidden");
+    menu.classList.remove("hidden");
 }
 
 </script>
