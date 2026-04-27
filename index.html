@@ -67,6 +67,7 @@ th {
 
 canvas {
     display: block;
+    cursor: grab;
 }
 
 .hidden {
@@ -114,17 +115,14 @@ canvas {
 </div>
 
 <script>
-
-/* ELEMENT */
 const menu = document.getElementById("menu");
 const game = document.getElementById("game");
-const historyDiv = document.getElementById("history");
+const history = document.getElementById("history");
 const table = document.getElementById("table");
 const chartContainer = document.getElementById("chartContainer");
 const box = document.getElementById("box");
 const answer = document.getElementById("answer");
 const result = document.getElementById("result");
-const canvas = document.getElementById("chart");
 
 let total = 10;
 let done = 0;
@@ -132,7 +130,18 @@ let correct = 0;
 let a, b;
 let startTime;
 
+let offsetX = 0;
+let offsetY = 0;
+let isDragging = false;
+let lastX = 0;
+let lastY = 0;
+
+let canvas;
 let graphMode = "avg";
+
+window.addEventListener("load", () => {
+    canvas = document.getElementById("chart");
+});
 
 /* GAME */
 function startGame() {
@@ -214,7 +223,7 @@ function save(time, avg, percent) {
 /* HISTORY */
 function showHistory() {
     menu.classList.add("hidden");
-    historyDiv.classList.remove("hidden");
+    history.classList.remove("hidden");
     showTable();
 }
 
@@ -250,12 +259,12 @@ function showGraph() {
     chartContainer.style.display = "block";
 
     let data = JSON.parse(localStorage.getItem("history") || "[]");
-
     let ctx = canvas.getContext("2d");
 
     canvas.width = 800 + data.length * 90;
     canvas.height = 450;
 
+    ctx.setTransform(1,0,0,1,0,0);
     ctx.clearRect(0,0,canvas.width,canvas.height);
 
     if (data.length === 0) return;
@@ -268,6 +277,10 @@ function showGraph() {
     let usableH = canvas.height - padT - padB;
 
     let stepX = data.length > 1 ? usableW / (data.length - 1) : 0;
+
+    // 🔥 FIX QUAN TRỌNG
+    ctx.save();
+    ctx.translate(offsetX, offsetY);
 
     /* GRID */
     ctx.strokeStyle = "#ddd";
@@ -339,14 +352,36 @@ function showGraph() {
 
         ctx.fillText(text, x - 15, yValue);
     });
+
+    ctx.restore();
 }
+
+/* DRAG */
+canvas.addEventListener("mousedown",e=>{
+    isDragging=true;
+    lastX=e.clientX;
+    lastY=e.clientY;
+});
+
+window.addEventListener("mouseup",()=>isDragging=false);
+
+window.addEventListener("mousemove",e=>{
+    if(!isDragging) return;
+
+    offsetX+=e.clientX-lastX;
+    offsetY+=e.clientY-lastY;
+
+    lastX=e.clientX;
+    lastY=e.clientY;
+
+    showGraph();
+});
 
 /* BACK */
 function backMenu(){
-    historyDiv.classList.add("hidden");
+    history.classList.add("hidden");
     menu.classList.remove("hidden");
 }
-
 </script>
 
 </body>
