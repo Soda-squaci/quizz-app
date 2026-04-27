@@ -224,6 +224,11 @@ function backMenu() {
 function backToMenu() {
     document.getElementById("result").innerHTML = "";
     document.getElementById("menu").classList.remove("hidden");
+    document.getElementById("ans").addEventListener("keydown", function(e) {
+    if (e.key === "Enter") {
+        check();
+    }
+});
 }
 </script>
 
