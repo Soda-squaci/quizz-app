@@ -6,13 +6,12 @@
 
 <style>
 body {
-    <h1 style="color:red">TEST OK</h1>
     background: #ccc;
     text-align: center;
     font-family: Arial;
 }
 
-/* 🔥 NÚT CHUNG */
+/* NÚT */
 button {
     font-size: 22px;
     margin: 10px;
@@ -21,30 +20,29 @@ button {
     cursor: pointer;
 }
 
-/* 🔥 NÚT MENU TO HƠN */
+/* NÚT MENU TO */
 #menu button {
     font-size: 34px;
-    padding: 22px 40px;
+    padding: 20px 35px;
 }
 
-/* BOX CÂU HỎI */
+/* CÂU HỎI */
 #box {
     background: white;
     color: black;
-    padding: 20px;
     font-size: 42px;
-    margin: 20px auto;
     width: 260px;
+    margin: 20px auto;
+    padding: 20px;
     border-radius: 12px;
 }
 
 /* INPUT */
 input {
-    background: orange;
     font-size: 30px;
     padding: 10px;
-    text-align: center;
     width: 200px;
+    text-align: center;
     border-radius: 8px;
 }
 
@@ -63,12 +61,6 @@ th {
     color: white;
 }
 
-#result {
-    white-space: pre-line;
-    margin-top: 20px;
-    font-size: 22px;
-}
-
 .hidden {
     display: none;
 }
@@ -81,14 +73,14 @@ th {
 
 <!-- MENU -->
 <div id="menu">
-    <button onclick="start()">Bắt đầu luyện tập</button>
-    <button onclick="showHistory()">Xem lại kết quả</button>
+    <button onclick="startGame()">Bắt đầu</button>
+    <button onclick="showHistory()">Lịch sử</button>
 </div>
 
 <!-- GAME -->
 <div id="game" class="hidden">
     <div id="box"></div>
-    <input id="ans" autofocus>
+    <input id="answer">
     <br><br>
     <button onclick="check()">Trả lời</button>
 </div>
@@ -98,7 +90,7 @@ th {
 
 <!-- HISTORY -->
 <div id="history" class="hidden">
-    <h3>Kết quả 📊</h3>
+    <h3>Lịch sử 📊</h3>
     <table id="table">
         <tr>
             <th>Ngày</th>
@@ -117,8 +109,8 @@ let correct = 0;
 let a, b;
 let startTime;
 
-/* ▶️ BẮT ĐẦU */
-function start() {
+/* ▶️ BẮT ĐẦU GAME */
+function startGame() {
     document.getElementById("menu").classList.add("hidden");
     document.getElementById("game").classList.remove("hidden");
     document.getElementById("result").innerHTML = "";
@@ -127,13 +119,13 @@ function start() {
     correct = 0;
     startTime = Date.now();
 
-    next();
+    nextQuestion();
 }
 
-/* ➡️ CÂU TIẾP */
-function next() {
+/* ➡️ CÂU HỎI TIẾP THEO */
+function nextQuestion() {
     if (done >= total) {
-        finish();
+        finishGame();
         return;
     }
 
@@ -142,7 +134,7 @@ function next() {
 
     document.getElementById("box").innerText = a + " + " + b;
 
-    let input = document.getElementById("ans");
+    let input = document.getElementById("answer");
     input.value = "";
     input.focus();
 
@@ -151,16 +143,16 @@ function next() {
 
 /* ✔️ KIỂM TRA */
 function check() {
-    let val = Number(document.getElementById("ans").value);
+    let val = Number(document.getElementById("answer").value);
     if (isNaN(val)) return;
 
     if (val === a + b) correct++;
 
-    setTimeout(next, 300);
+    setTimeout(nextQuestion, 300);
 }
 
 /* 🏁 KẾT THÚC */
-function finish() {
+function finishGame() {
     let time = (Date.now() - startTime) / 1000;
     let avg = time / total;
     let percent = Math.round((correct / total) * 100);
@@ -168,16 +160,16 @@ function finish() {
     document.getElementById("game").classList.add("hidden");
 
     document.getElementById("result").innerHTML =
-        "⏱️ " + time.toFixed(2) + "s\n" +
-        "⚡ TB: " + avg.toFixed(2) + "s\n" +
-        "🎯 " + percent + "%\n\n" +
+        "⏱️ " + time.toFixed(2) + "s<br>" +
+        "⚡ TB: " + avg.toFixed(2) + "s<br>" +
+        "🎯 " + percent + "%<br><br>" +
         "<button onclick='backMenu()'>🏠 Về menu</button>";
 
-    save(time, avg, percent);
+    saveResult(time, avg, percent);
 }
 
 /* 💾 LƯU */
-function save(time, avg, percent) {
+function saveResult(time, avg, percent) {
     let data = JSON.parse(localStorage.getItem("history") || "[]");
 
     data.push({
@@ -190,7 +182,7 @@ function save(time, avg, percent) {
     localStorage.setItem("history", JSON.stringify(data));
 }
 
-/* 📊 HISTORY */
+/* 📊 XEM LỊCH SỬ */
 function showHistory() {
     document.getElementById("menu").classList.add("hidden");
     document.getElementById("history").classList.remove("hidden");
@@ -221,15 +213,12 @@ function backMenu() {
     document.getElementById("menu").classList.remove("hidden");
 }
 
-function backToMenu() {
-    document.getElementById("result").innerHTML = "";
-    document.getElementById("menu").classList.remove("hidden");
-    document.getElementById("ans").addEventListener("keydown", function(e) {
+/* ⌨️ ENTER = TRẢ LỜI */
+document.getElementById("answer").addEventListener("keydown", function(e) {
     if (e.key === "Enter") {
         check();
     }
 });
-}
 </script>
 
 </body>
