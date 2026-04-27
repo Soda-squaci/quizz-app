@@ -261,33 +261,40 @@ function showGraph() {
     let w = canvas.width;
     let h = canvas.height;
 
-    let top = 20;
-    let bottom = 50;
-    let usableH = h - top - bottom;
+    /* 🔥 TĂNG KHOẢNG CÁCH */
+    let paddingLeft = 40;
+    let paddingRight = 20;
+    let paddingTop = 30;
+    let paddingBottom = 60;
 
-    let stepX = w / (data.length + 1);
+    let usableW = w - paddingLeft - paddingRight;
+    let usableH = h - paddingTop - paddingBottom;
 
-    /* GRID */
+    let stepX = usableW / (data.length - 1);
+
+    if (data.length === 1) stepX = 0;
+
+    /* 📊 GRID (rộng + rõ hơn) */
     ctx.strokeStyle = "#ddd";
     ctx.lineWidth = 1;
 
     for (let i = 0; i <= 10; i++) {
-        let y = top + (usableH / 10) * i;
+        let y = paddingTop + (usableH / 10) * i;
 
         ctx.beginPath();
-        ctx.moveTo(0, y);
-        ctx.lineTo(w, y);
+        ctx.moveTo(paddingLeft, y);
+        ctx.lineTo(w - paddingRight, y);
         ctx.stroke();
     }
 
-    /* LINE */
+    /* 📈 LINE */
     ctx.beginPath();
     ctx.strokeStyle = "blue";
     ctx.lineWidth = 3;
 
     data.forEach((d, i) => {
-        let x = (i + 1) * stepX;
-        let y = top + usableH - (d.percent / 100) * usableH;
+        let x = paddingLeft + i * stepX;
+        let y = paddingTop + usableH - (d.percent / 100) * usableH;
 
         if (i === 0) ctx.moveTo(x, y);
         else ctx.lineTo(x, y);
@@ -295,19 +302,20 @@ function showGraph() {
 
     ctx.stroke();
 
-    /* POINTS + DATE */
+    /* 🔴 POINTS */
     data.forEach((d, i) => {
-        let x = (i + 1) * stepX;
-        let y = top + usableH - (d.percent / 100) * usableH;
+        let x = paddingLeft + i * stepX;
+        let y = paddingTop + usableH - (d.percent / 100) * usableH;
 
         ctx.beginPath();
         ctx.arc(x, y, 6, 0, Math.PI * 2);
         ctx.fillStyle = "red";
         ctx.fill();
 
+        /* 📅 NGÀY (KHÔNG DÍNH MÉP) */
         ctx.fillStyle = "black";
         ctx.font = "12px Arial";
-        ctx.fillText(d.date, x - 25, h - 10);
+        ctx.fillText(d.date, x - 25, h - 20);
     });
 }
 
