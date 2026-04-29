@@ -95,7 +95,8 @@ th {
     <button onclick="showGraph()">📈 Đồ thị</button>
 
     <br>
-    <button onclick="setGraphMode('avg')">⏱️ TB</button>
+    Zoom:
+    <input type="range" id="zoomSlider" min="1" max="3" step="0.1" value="1">
 
     <table id="table"></table>
 
@@ -117,14 +118,20 @@ const box = document.getElementById("box");
 const answer = document.getElementById("answer");
 const result = document.getElementById("result");
 const canvas = document.getElementById("chart");
+const zoomSlider = document.getElementById("zoomSlider");
 
+let zoom = 1;
 let total = 10;
 let done = 0;
 let correct = 0;
 let a, b;
 let startTime;
 
-let graphMode = "avg";
+/* FIX: slider hoạt động */
+zoomSlider.addEventListener("input", e => {
+    zoom = Number(e.target.value);
+    showGraph();
+});
 
 /* GAME */
 function startGame() {
@@ -152,7 +159,7 @@ function nextQuestion() {
     answer.focus();
 }
 
-/* CHECK: đúng mới qua */
+/* ĐÚNG mới qua */
 function check() {
     let val = Number(answer.value);
 
@@ -168,7 +175,6 @@ function check() {
         answer.value = "❎";
         answer.style.background = "red";
 
-        // KHÔNG tăng done → ở lại câu này
         setTimeout(() => {
             answer.value = "";
             answer.style.background = "orange";
@@ -254,7 +260,7 @@ function showGraph() {
     let padB = 70;
 
     let usableW = canvas.width - padL - 30;
-    let usableH = canvas.height - padT - padB;
+    let usableH = (canvas.height - padT - padB) * zoom; // 🔥 zoom tại đây
 
     let stepX = data.length > 1 ? usableW / (data.length - 1) : 0;
 
