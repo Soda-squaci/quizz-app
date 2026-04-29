@@ -57,11 +57,14 @@ th {
     color: white;
 }
 
+/* 🔥 QUAN TRỌNG: thêm overflow-x */
 #chartContainer {
-    width: 95%;
+    width: 90%;
     margin: auto;
     background: white;
     border-radius: 10px;
+    overflow-x: auto;   /* ← thanh kéo ngang */
+    overflow-y: hidden;
 }
 
 .hidden {
@@ -94,10 +97,6 @@ th {
     <button onclick="showTable()">📋 Bảng</button>
     <button onclick="showGraph()">📈 Đồ thị</button>
 
-    <br>
-    Zoom:
-    <input type="range" id="zoomSlider" min="1" max="3" step="0.1" value="1">
-
     <table id="table"></table>
 
     <div id="chartContainer">
@@ -118,20 +117,12 @@ const box = document.getElementById("box");
 const answer = document.getElementById("answer");
 const result = document.getElementById("result");
 const canvas = document.getElementById("chart");
-const zoomSlider = document.getElementById("zoomSlider");
 
-let zoom = 1;
 let total = 10;
 let done = 0;
 let correct = 0;
 let a, b;
 let startTime;
-
-/* FIX: slider hoạt động */
-zoomSlider.addEventListener("input", e => {
-    zoom = Number(e.target.value);
-    showGraph();
-});
 
 /* GAME */
 function startGame() {
@@ -159,7 +150,7 @@ function nextQuestion() {
     answer.focus();
 }
 
-/* ĐÚNG mới qua */
+/* đúng mới qua */
 function check() {
     let val = Number(answer.value);
 
@@ -248,7 +239,7 @@ function showGraph() {
     let data = JSON.parse(localStorage.getItem("history") || "[]");
     let ctx = canvas.getContext("2d");
 
-    canvas.width = 800 + data.length * 80;
+    canvas.width = 800 + data.length * 100; // 👈 dài ra để kéo
     canvas.height = 450;
 
     ctx.clearRect(0,0,canvas.width,canvas.height);
@@ -260,7 +251,7 @@ function showGraph() {
     let padB = 70;
 
     let usableW = canvas.width - padL - 30;
-    let usableH = (canvas.height - padT - padB) * zoom; // 🔥 zoom tại đây
+    let usableH = canvas.height - padT - padB;
 
     let stepX = data.length > 1 ? usableW / (data.length - 1) : 0;
 
